@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment / Credentials
+.env
+
+# Vite / frontend build
+frontend/dist/
+frontend/node_modules/
+
+# Python virtual environments
+venv/
+env/
+.env/   # if you created virtualenv folder named .env
+
+# Logs and database
+*.log
+*.sqlite3
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
