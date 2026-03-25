@@ -14,10 +14,10 @@ class GameEngine:
     games: Dict[str, Game] = field(default_factory=dict)
     locks: Dict[str, asyncio.Lock] = field(default_factory=dict)
 
-    async def create_game(self) -> str:
+    async def create_game(self, mode: str) -> str:
         game_id = str(uuid.uuid4())
 
-        game = Game(id=game_id)
+        game = Game(id=game_id, mode=mode)
 
         self.games[game_id] = game
         self.locks[game_id] = asyncio.Lock()
@@ -35,6 +35,12 @@ class GameEngine:
             return False
 
         async with lock:
+            if game.phase != "waiting":
+                return False
+            
+            if len(game.players) >= 2: # currently, we cap games at 2 players
+                return False
+        
             if player_id in game.players:
                 return True
 
@@ -58,7 +64,6 @@ class GameEngine:
             game.round_number += 1
 
     async def submit_guess(self, game_id: str, player_id: str, lat: float, lng: float) -> Optional[dict]:
-
         game = self.games.get(game_id)
         lock = self.locks.get(game_id)
 
@@ -93,7 +98,7 @@ class GameEngine:
         for player_id in game.players:
             # If a player didn't guess, penalize them
             if player_id not in game.guesses:
-                game.players[player_id]["score"] -= score
+                game.players[player_id]["score"] -= BASIC_PENALTY
                 results["players"][player_id] = {
                     "guess": None,
                     "distance": -1,

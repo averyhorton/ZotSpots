@@ -10,10 +10,13 @@ class Game:
     actual_location: Optional[dict] = None  # {"lat": float, "lng": float} for current round. Dynamically resets after each round
     phase: str = "waiting"  # can be "waiting", "guessing", "results"
     round_number: int = 0
+    mode: str = "multiplayer" # can be singleplayer or multiplayer depending on the lobby
 
     async def check_win(self) -> Optional[tuple[str, dict]]:
+        if self.mode == "singleplayer":
+            return None # Nobody wins in singleplayer!
         if len(self.players) != 2:
-            raise Exception # Only handle 2-player games for now
+            raise Exception # Only handle 2-player games for now; may scale upwards from 2 eventually
 
         # Extract players
         (p1_id, p1_data), (p2_id, p2_data) = list(self.players.items())

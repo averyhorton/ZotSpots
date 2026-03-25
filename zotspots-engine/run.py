@@ -46,26 +46,33 @@ async def fetch_random_locations(n: int = 5) -> List[Dict]:
 
 async def wait_for_all_guesses(engine: GameEngine, game_id: str):
     game = await engine.get_game(game_id)
-    if not game:
+    lock = engine.locks.get(game_id)
+
+    if not game or not lock:
         return
 
-    while len(game.guesses) < len(game.players):
+    while True:
+        async with lock: # negligible delay compared to timer
+            if len(game.guesses) >= len(game.players):
+                return
         await asyncio.sleep(0.5)
 
 async def run_game(engine: GameEngine, game_id: str):
     game = await engine.get_game(game_id)
-    if not game:
+    lock = engine.locks.get(game_id)
+    if not game or not lock:
         print(f"Game {game_id} not found")
         return
 
     # Fetch 5 random locations from Supabase
-    game.round_locations = await fetch_random_locations(n=NUM_ROUNDS)
+    try:
+        game.round_locations = await fetch_random_locations(n=NUM_ROUNDS)
+    except Exception as e:
+        print(f"Failed to fetch locations: {e}")
+        return
 
     for idx, location in enumerate(game.round_locations):
-        game.current_round_index = idx
-        game.actual_location = location
-        game.phase = "guessing"
-        game.guesses.clear() # resets guesses at the beginning of every round
+        await engine.start_round(game_id, location) # cleans up the last round and begins the next
 
         print(f"Round {idx+1} started: {location['name']}")
 
@@ -81,8 +88,9 @@ async def run_game(engine: GameEngine, game_id: str):
             task.cancel()
 
         # Compute results
-        results = engine.compute_results(game)
-        game.phase = "results"
+        async with lock:
+            results = engine.compute_results(game)
+            game.phase = "results"
         print(f"Round {idx+1} results: {results}")
 
         # Check if someone won
@@ -95,4 +103,6 @@ async def run_game(engine: GameEngine, game_id: str):
 
         await asyncio.sleep(INTER_ROUND_DELAY)
 
-    print(f"Game {game_id} finished")
+    print(f"Game {game_id} finished") # delete game and lock from memory
+    del engine.games[game_id]
+    del engine.locks[game_id]
