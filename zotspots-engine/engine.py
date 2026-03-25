@@ -55,6 +55,7 @@ class GameEngine:
             game.phase = "guessing"
             game.actual_location = actual_location
             game.guesses = {}
+            game.round_number += 1
 
     async def submit_guess(self, game_id: str, player_id: str, lat: float, lng: float) -> Optional[dict]:
 
@@ -89,33 +90,35 @@ class GameEngine:
             "players": {}
         }
 
-        if game.guesses == {}: # if neither player guessed, penalize them
-            for player_id, guess in game.guesses.items():
-                game.players[player_id]["score"] -= BASIC_PENALTY # basic penalty for missing a guess for both players
-
+        for player_id in game.players:
+            # If a player didn't guess, penalize them
+            if player_id not in game.guesses:
+                game.players[player_id]["score"] -= score
                 results["players"][player_id] = {
-                    "guess": guess,
-                    "distance": -1, # No guess submitted
+                    "guess": None,
+                    "distance": -1,
                     "score": BASIC_PENALTY
                 }
-        else:
-            for player_id, guess in game.guesses.items():
-                distance = self._haversine(
-                    guess["lat"],
-                    guess["lng"],
-                    game.actual_location["lat"],
-                    game.actual_location["lng"]
-                )
+                continue
+            
+            # Otherwise, get their guess and score it
+            guess = game.guesses[player_id] 
+            distance = self._haversine(
+                guess["lat"],
+                guess["lng"],
+                game.actual_location["lat"],
+                game.actual_location["lng"]
+            )
 
-                score = self._score_from_distance(distance)
+            score = self._score_from_distance(distance)
 
-                game.players[player_id]["score"] -= score
+            game.players[player_id]["score"] -= score
 
-                results["players"][player_id] = {
-                    "guess": guess,
-                    "distance": distance,
-                    "score": score
-                }
+            results["players"][player_id] = {
+                "guess": guess,
+                "distance": distance,
+                "score": score
+            }
 
         return results
 

@@ -34,7 +34,7 @@ async def fetch_random_locations(n: int = 5) -> List[Dict]:
     chosen_ids = random.sample(all_ids, min(n, len(all_ids)))
 
     # 4. Fetch matching rows
-    rows_response = supabase.from_("locations") \
+    rows_response = supabase.from_(TABLE) \
         .select("id, name, lat, lng, image_file") \
         .in_("id", chosen_ids) \
         .execute()

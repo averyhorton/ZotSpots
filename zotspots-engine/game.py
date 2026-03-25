@@ -9,6 +9,7 @@ class Game:
     guesses: Dict[str, dict] = field(default_factory=dict)  # player_id → {"lat": float, "lng": float}. Dynamically resets after each round
     actual_location: Optional[dict] = None  # {"lat": float, "lng": float} for current round. Dynamically resets after each round
     phase: str = "waiting"  # can be "waiting", "guessing", "results"
+    round_number: int = 0
 
     async def check_win(self) -> Optional[tuple[str, dict]]:
         if len(self.players) != 2:
