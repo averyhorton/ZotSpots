@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from typing import List, Dict
 from engine import GameEngine
 from config import ROUND_DURATION, NUM_ROUNDS, INTER_ROUND_DELAY, TABLE  
+from sockets import manager
 
 async def fetch_random_locations(n: int = 5) -> List[Dict]:
     """
@@ -70,39 +71,61 @@ async def run_game(engine: GameEngine, game_id: str):
     except Exception as e:
         print(f"Failed to fetch locations: {e}")
         return
-
+    
     for idx, location in enumerate(game.round_locations):
-        await engine.start_round(game_id, location) # cleans up the last round and begins the next
+        try:
+            # Wrap each round in a try block in case we get an error
+            await engine.start_round(game_id, location) # cleans up the last round and begins the next
 
-        print(f"Round {idx+1} started: {location['name']}")
+            # Broadcast round start to frontend
+            asyncio.create_task(manager.broadcast(game_id, {
+                "type": "round_start",
+                "round": idx + 1,
+                "image": location["image_file"]
+            }))
 
-        # Wait for all players to submit guesses or timeout
-        round_end = asyncio.create_task(asyncio.sleep(ROUND_DURATION))
-        all_guesses_submitted = asyncio.create_task(wait_for_all_guesses(engine, game_id))
+            # Wait for all players to submit guesses or timeout
+            round_end = asyncio.create_task(asyncio.sleep(ROUND_DURATION))
+            all_guesses_submitted = asyncio.create_task(wait_for_all_guesses(engine, game_id))
 
-        done, pending = await asyncio.wait(
-            [round_end, all_guesses_submitted],
-            return_when=asyncio.FIRST_COMPLETED
-        )
-        for task in pending: # If any players didn't guess in time, cancel their guesses
-            task.cancel()
+            done, pending = await asyncio.wait(
+                [round_end, all_guesses_submitted],
+                return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in pending: # If any players didn't guess in time, cancel their guesses
+                task.cancel()
 
-        # Compute results
-        async with lock:
-            results = engine.compute_results(game)
-            game.phase = "results"
-        print(f"Round {idx+1} results: {results}")
+            # Compute results
+            async with lock:
+                results = engine.compute_results(game)
 
-        # Check if someone won
-        winner = await game.check_win()
-        if winner:
-            print(f"Game Over! Winner: {winner}")
-            break
+                # Broadcast results of round to frontend
+                asyncio.create_task(manager.broadcast(game_id, {
+                    "type": "results",
+                    "round": idx + 1,
+                    "results": results
+                }))
 
-        # TODO: Broadcast results to frontend via WebSocket
+                game.phase = "results"
 
-        await asyncio.sleep(INTER_ROUND_DELAY)
+            # Check if someone won
+            winner = await game.check_win()
+            if winner:
+                break
 
-    print(f"Game {game_id} finished") # delete game and lock from memory
+            # TODO: Broadcast results to frontend via WebSocket
+
+            await asyncio.sleep(INTER_ROUND_DELAY)
+        except Exception as e:
+            print(f"Error in game {game_id}, round {idx+1}: {e}")
+
+    # Broadcast results to frontend
+    asyncio.create_task(manager.broadcast(game_id, {
+        "type": "game_over",
+        "winner": winner, # could be None for singleplayer or tie
+        "final_scores": game.players
+    }))
+
+    # delete game and lock from memory
     del engine.games[game_id]
     del engine.locks[game_id]

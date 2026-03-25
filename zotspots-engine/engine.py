@@ -4,6 +4,7 @@ import uuid
 from typing import Dict, Optional
 from game import Game
 from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE
+from sockets import manager
 
 """
 ** Game Engine Class **
@@ -84,6 +85,13 @@ class GameEngine:
 
             if len(game.guesses) == len(game.players):
                 results = self.compute_results(game)
+
+                # Broadcast results of round to frontend
+                asyncio.create_task(manager.broadcast(game_id, {
+                    "type": "results",
+                    "results": results
+                }))
+                
                 game.phase = "results"
                 return results
 
