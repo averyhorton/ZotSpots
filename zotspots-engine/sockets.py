@@ -26,7 +26,10 @@ class ConnectionManager:
 
     async def send_personal_message(self, websocket: WebSocket, message: dict):
         # Sends a message to just one client
-        await websocket.send_json(message)
+        try:
+            await websocket.send_json(message)
+        except:
+            return
 
     async def broadcast(self, game_id: str, message: dict):
         if game_id not in self.connections:

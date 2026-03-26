@@ -34,7 +34,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             if msg_type == "create_game":
                 mode = data.get("mode", "singleplayer")
-                game_id = await engine.create_game()
+                game_id = await engine.create_game(mode)
                 game = await engine.get_game(game_id)
                 connected = await manager.connect(game_id, websocket)
                 if not connected:

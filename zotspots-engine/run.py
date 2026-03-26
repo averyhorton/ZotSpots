@@ -88,6 +88,9 @@ async def run_game(engine: GameEngine, game_id: str):
             async with lock:
                 results = engine.compute_results(game)
 
+                # Set game phase to results to prevent double computation in race
+                game.phase = "results"
+
                 # Broadcast results of round to frontend
                 await manager.broadcast(game_id, {
                     "type": "results",
@@ -95,10 +98,8 @@ async def run_game(engine: GameEngine, game_id: str):
                     "results": results
                 })
 
-                game.phase = "results"
-
             # Check if someone won
-            winner = await game.check_win()
+            winner = game.check_win()
             if winner:
                 break
             await asyncio.sleep(INTER_ROUND_DELAY)
@@ -113,7 +114,7 @@ async def run_game(engine: GameEngine, game_id: str):
     # Broadcast results to frontend
     await manager.broadcast(game_id, {
         "type": "game_over",
-        "winner": winner, # could be None for singleplayer or tie
+        "winner": {"id": winner[0], "score": winner[1]["score"]} if winner else None, # could be None for singleplayer or tie
         "final_scores": game.players
     })
 

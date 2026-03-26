@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import asyncio
 import uuid
+import math
 from typing import Dict, Optional
 from game import Game
 from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE
@@ -61,7 +62,7 @@ class GameEngine:
         async with lock:
             # delete game and lock from memory
             del self.games[game_id]
-            del self.locks[game_id]
+        del self.locks[game_id]
 
     async def start_round(self, game_id: str, actual_location: dict):
         game = self.games.get(game_id)
@@ -76,40 +77,26 @@ class GameEngine:
             game.guesses = {}
             game.round_number += 1
 
-    async def submit_guess(self, game_id: str, player_id: str, lat: float, lng: float) -> Optional[dict]:
+    async def submit_guess(self, game_id: str, player_id: str, lat: float, lng: float):
         game = self.games.get(game_id)
         lock = self.locks.get(game_id)
 
         if not game or not lock:
-            return None
+            return
 
         async with lock:
             if game.phase != "guessing":
-                return None
+                return
 
             if player_id not in game.guesses: # Only accept a guess if the player has not already guessed this round
                 game.guesses[player_id] = {
                     "lat": lat,
                     "lng": lng
                 }
-            else: 
-                return None
-
-            if len(game.guesses) == len(game.players):
-                results = self.compute_results(game)
-
-                # Broadcast results of round to frontend
-                asyncio.create_task(manager.broadcast(game_id, {
-                    "type": "results",
-                    "results": results
-                }))
-                
-                game.phase = "results"
-                return results
-
-            return None
 
     def compute_results(self, game: Game) -> dict:
+        if game.phase == "results":
+            raise Exception("compute_results called multiple times in same round")
         results = {
             "actual_location": game.actual_location,
             "players": {}
@@ -122,7 +109,7 @@ class GameEngine:
                 results["players"][player_id] = {
                     "guess": None,
                     "distance": -1,
-                    "score": BASIC_PENALTY
+                    "score": game.players[player_id]["score"]
                 }
                 continue
             
@@ -135,22 +122,20 @@ class GameEngine:
                 game.actual_location["lng"]
             )
 
-            score = self._score_from_distance(distance)
+            penalty = self._score_from_distance(distance)
 
-            game.players[player_id]["score"] -= score
+            game.players[player_id]["score"] -= penalty
 
             results["players"][player_id] = {
                 "guess": guess,
                 "distance": distance,
-                "score": score
+                "score": game.players[player_id]["score"]
             }
 
         return results
 
     def _haversine(self, lat1, lng1, lat2, lng2):
         # Use haversine distance as a basis for scoring, referenced below in _score_from_distance
-        import math
-
         R = 6371e3
         phi1 = math.radians(lat1)
         phi2 = math.radians(lat2)
