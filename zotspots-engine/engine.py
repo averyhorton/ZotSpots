@@ -51,6 +51,18 @@ class GameEngine:
 
             return True
 
+    async def kill_lobby(self, game_id: str):
+        # since removing a player kills a lobby, just kill the lobby
+        game = self.games.get(game_id)
+        lock = self.locks.get(game_id)
+        if not game or not lock:
+            return None  # nothing to do
+
+        async with lock:
+            # delete game and lock from memory
+            del self.games[game_id]
+            del self.locks[game_id]
+
     async def start_round(self, game_id: str, actual_location: dict):
         game = self.games.get(game_id)
         lock = self.locks.get(game_id)
