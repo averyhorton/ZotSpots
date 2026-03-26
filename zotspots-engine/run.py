@@ -1,10 +1,8 @@
 import asyncio
-import os
-from supabase import create_client
-from dotenv import load_dotenv
+import random
 from typing import List, Dict
 from engine import GameEngine
-from config import ROUND_DURATION, NUM_ROUNDS, INTER_ROUND_DELAY, TABLE  
+from config import ROUND_DURATION, NUM_ROUNDS, INTER_ROUND_DELAY, TABLE, SUPABASE
 from sockets import manager
 
 async def fetch_random_locations(n: int = 5) -> List[Dict]:
@@ -14,34 +12,20 @@ async def fetch_random_locations(n: int = 5) -> List[Dict]:
     """
 
     # Supabase doesn’t natively support ORDER BY RANDOM() via its API,
-    # so we can fetch all IDs and randomly sample them in Python.
-
-    # 1. Load database credentials and boot up client
-    load_dotenv()
-    SUPABASE_URL = os.getenv("SUPABASE_URL")
-    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  
+    # so we can fetch all IDs and randomly sample them in Python. 
 
     # 2. Get all IDs
-    all_ids_response = supabase.from_(TABLE).select("id").execute()
-
-    if all_ids_response.error:
-        raise Exception(all_ids_response.error)
-
+    all_ids_response = SUPABASE.from_(TABLE).select("id").execute()
     all_ids = [row["id"] for row in all_ids_response.data]
 
     # 3. Randomly choose n IDs
-    import random
     chosen_ids = random.sample(all_ids, min(n, len(all_ids)))
 
     # 4. Fetch matching rows
-    rows_response = supabase.from_(TABLE) \
+    rows_response = SUPABASE.from_(TABLE) \
         .select("id, name, lat, lng, image_file") \
         .in_("id", chosen_ids) \
         .execute()
-
-    if rows_response.error:
-        raise Exception(rows_response.error)
 
     return rows_response.data
 
@@ -67,22 +51,23 @@ async def run_game(engine: GameEngine, game_id: str):
 
     # Fetch 5 random locations from Supabase
     try:
-        game.round_locations = await fetch_random_locations(n=NUM_ROUNDS)
+        round_locations = await fetch_random_locations(n=NUM_ROUNDS)
     except Exception as e:
         print(f"Failed to fetch locations: {e}")
         return
     
-    for idx, location in enumerate(game.round_locations):
+    winner = None
+    for idx, location in enumerate(round_locations):
         try:
             # Wrap each round in a try block in case we get an error
             await engine.start_round(game_id, location) # cleans up the last round and begins the next
 
             # Broadcast round start to frontend
-            asyncio.create_task(manager.broadcast(game_id, {
+            await manager.broadcast(game_id, {
                 "type": "round_start",
                 "round": idx + 1,
                 "image": location["image_file"]
-            }))
+            })
 
             # Wait for all players to submit guesses or timeout
             round_end = asyncio.create_task(asyncio.sleep(ROUND_DURATION))
@@ -94,17 +79,21 @@ async def run_game(engine: GameEngine, game_id: str):
             )
             for task in pending: # If any players didn't guess in time, cancel their guesses
                 task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
             # Compute results
             async with lock:
                 results = engine.compute_results(game)
 
                 # Broadcast results of round to frontend
-                asyncio.create_task(manager.broadcast(game_id, {
+                await manager.broadcast(game_id, {
                     "type": "results",
                     "round": idx + 1,
                     "results": results
-                }))
+                })
 
                 game.phase = "results"
 
@@ -112,20 +101,21 @@ async def run_game(engine: GameEngine, game_id: str):
             winner = await game.check_win()
             if winner:
                 break
-
-            # TODO: Broadcast results to frontend via WebSocket
-
             await asyncio.sleep(INTER_ROUND_DELAY)
         except Exception as e:
-            print(f"Error in game {game_id}, round {idx+1}: {e}")
+            await manager.broadcast(game_id, {
+                    "type": "error",
+                    "reason": "critical_failure",
+                    "message": f"Exception thrown: {e}"
+                })
+            break
 
     # Broadcast results to frontend
-    asyncio.create_task(manager.broadcast(game_id, {
+    await manager.broadcast(game_id, {
         "type": "game_over",
         "winner": winner, # could be None for singleplayer or tie
         "final_scores": game.players
-    }))
+    })
 
-    # delete game and lock from memory
-    del engine.games[game_id]
-    del engine.locks[game_id]
+    # clean up the lobby and remove from memory
+    await engine.kill_lobby(game_id)

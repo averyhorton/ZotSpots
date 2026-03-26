@@ -8,7 +8,7 @@ class Game:
     players: Dict[str, dict] = field(default_factory=dict)  # player_id → info, e.g., {"score": 0}
     guesses: Dict[str, dict] = field(default_factory=dict)  # player_id → {"lat": float, "lng": float}. Dynamically resets after each round
     actual_location: Optional[dict] = None  # {"lat": float, "lng": float} for current round. Dynamically resets after each round
-    phase: str = "waiting"  # can be "waiting", "guessing", "results"
+    phase: str = "waiting"  # can be "waiting", "guessing", "results". Waiting is the status when we are in a lobby but not a game.
     round_number: int = 0
     mode: str = "multiplayer" # can be singleplayer or multiplayer depending on the lobby
 
