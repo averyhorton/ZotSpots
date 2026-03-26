@@ -19,7 +19,10 @@ app.add_middleware(
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+    try:
+        await websocket.accept()
+    except Exception:
+        return # failed to connect
     player_id = None
     game_id = None
     game_task = None
@@ -33,6 +36,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 mode = data.get("mode", "singleplayer")
                 game_id = await engine.create_game()
                 game = await engine.get_game(game_id)
+                connected = await manager.connect(game_id, websocket)
+                if not connected:
+                    await engine.kill_lobby(game_id)
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "bad_connection",
+                        "message": "Creation of game lobby failed."
+                    })
+                    continue
                 game.mode = mode
                 player_id = data.get("player_id")
                 await engine.join_game(game_id, player_id)
@@ -40,62 +52,95 @@ async def websocket_endpoint(websocket: WebSocket):
                     "type": "game_created",
                     "game_id": game_id
                 })
-
-                # Start the game loop in background
-                game_task = asyncio.create_task(run_game_task(game_id))
-
             elif msg_type == "join_game":
                 game_id = data.get("game_id")
                 player_id = data.get("player_id")
-                joined = await engine.join_game(game_id, player_id)
-                await manager.send_personal_message(websocket, {
-                    "type": "join_result",
-                    "success": joined
-                })
-                if joined:
-                    await manager.broadcast(game_id, {
+
+                joined = await manager.connect(game_id, websocket)
+                if not joined:
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "bad_connection",
+                        "message": "Lobby join failed."
+                    })
+                    continue
+                
+                joined_lobby = await engine.join_game(game_id, player_id)
+                if not joined_lobby:
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "no_game",
+                        "message": "Invalid game id given."
+                    })
+                    continue
+
+                await manager.broadcast(game_id, {
                         "type": "player_joined",
                         "player_id": player_id
                     })
-
+            elif msg_type == "start_game":
+                game = await engine.get_game(game_id)
+                if game_id and game.phase == "waiting":
+                    game_task = asyncio.create_task(run_game_task(game_id))
+                else:
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "no_game",
+                        "message": "You must create or join a game before starting."
+                    })
             elif msg_type == "guess":
                 if not game_id or not player_id:
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "no_game",
+                        "message": "You must create or join a game before guessing."
+                    })
                     continue
                 lat = data.get("lat")
                 lng = data.get("lng")
+                if not lat or not lng: # lat/lng will never legitimately be 0 in our geography, so falsy check is intentional
+                    # if we are not passed coordinates, invalidate the guess
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "invalid_guess",
+                        "message": "A valid lat/lng must be provided."
+                    })
+                    continue
                 results = await engine.submit_guess(game_id, player_id, lat, lng)
-                # The engine already broadcasts results, no need to send again here
-                pass
-
             elif msg_type == "disconnect":
                 if game_task:
                     game_task.cancel()
                     try:
                         await game_task
-                    except asyncio.CancelledError:
-                        await manager.broadcast(game_id, {
-                            "type": "game_cancelled",
-                            "reason": "player_left",
-                            "final_scores": (await engine.get_game(game_id)).players if await engine.get_game(game_id) else None
-                        })
-                        await engine.remove_player(game_id, player_id)
+                    except Exception:
+                        raise
+                    finally:
+                        game = await engine.get_game(game_id)
+                        if game:
+                            await manager.broadcast(game_id, {
+                                "type": "game_over",
+                                "final_scores": game.players if game else None
+                            })
+                            await engine.kill_lobby(game_id, player_id)
+                await manager.disconnect(game_id, websocket)
                 break
-
     except WebSocketDisconnect:
         # Handle unexpected disconnects
         if game_task:
             game_task.cancel()
             try:
                 await game_task
-            except asyncio.CancelledError:
-                await manager.broadcast(game_id, {
-                    "type": "game_cancelled",
-                    "reason": "player_left",
-                    "final_scores": (await engine.get_game(game_id)).players if await engine.get_game(game_id) else None
-                })
-                await engine.kill_lobby(game_id, player_id)
-        await manager.disconnect(websocket)
-
+            except Exception:
+                raise
+            finally:
+                game = await engine.get_game(game_id)
+                if game:
+                    await manager.broadcast(game_id, {
+                        "type": "game_over",
+                        "final_scores": game.players if game else None
+                    })
+                    await engine.kill_lobby(game_id, player_id)
+        await manager.disconnect(game_id, websocket)
 
 # Background wrapper to run engine game loop
 async def run_game_task(game_id: str):

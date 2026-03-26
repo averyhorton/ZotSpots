@@ -26,7 +26,7 @@ class GameEngine:
         return game_id
 
     async def get_game(self, game_id: str) -> Optional[Game]:
-        return self.games.get(game_id)
+        return self.games.get(game_id, None)
 
     async def join_game(self, game_id: str, player_id: str) -> bool:
         game = self.games.get(game_id)
@@ -147,7 +147,7 @@ class GameEngine:
 
         return results
 
-    def _haversine(self, lat1, lon1, lat2, lon2):
+    def _haversine(self, lat1, lng1, lat2, lng2):
         # Use haversine distance as a basis for scoring, referenced below in _score_from_distance
         import math
 
@@ -155,7 +155,7 @@ class GameEngine:
         phi1 = math.radians(lat1)
         phi2 = math.radians(lat2)
         dphi = math.radians(lat2 - lat1)
-        dlambda = math.radians(lon2 - lon1)
+        dlambda = math.radians(lng2 - lng1)
 
         a = (
             math.sin(dphi / 2) ** 2 +
