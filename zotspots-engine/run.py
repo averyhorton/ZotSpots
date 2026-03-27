@@ -14,19 +14,19 @@ async def fetch_random_locations(n: int = 5) -> List[Dict]:
     # Supabase doesn’t natively support ORDER BY RANDOM() via its API,
     # so we can fetch all IDs and randomly sample them in Python. 
 
-    # 2. Get all IDs
+    # 1. Get all IDs
     all_ids_response = SUPABASE.from_(TABLE).select("id").execute()
     all_ids = [row["id"] for row in all_ids_response.data]
 
-    # 3. Randomly choose n IDs
+    # 2. Randomly choose n IDs
     chosen_ids = random.sample(all_ids, min(n, len(all_ids)))
 
-    # 4. Fetch matching rows
+    # 3. Fetch matching rows
     rows_response = SUPABASE.from_(TABLE) \
         .select("id, name, lat, lng, image_file") \
         .in_("id", chosen_ids) \
         .execute()
-
+    
     return rows_response.data
 
 async def wait_for_all_guesses(engine: GameEngine, game_id: str):
@@ -48,6 +48,7 @@ async def run_game(engine: GameEngine, game_id: str):
     if not game or not lock:
         print(f"Game {game_id} not found")
         return
+
 
     # Fetch 5 random locations from Supabase
     try:
@@ -100,7 +101,7 @@ async def run_game(engine: GameEngine, game_id: str):
 
             # Check if someone won
             winner = game.check_win()
-            if winner:
+            if winner != None: 
                 break
             await asyncio.sleep(INTER_ROUND_DELAY)
         except Exception as e:

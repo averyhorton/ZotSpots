@@ -26,7 +26,6 @@ async def websocket_endpoint(websocket: WebSocket):
     player_id = None
     game_id = None
     game_task = None
-
     try:
         while True:
             data = await websocket.receive_json()
@@ -122,7 +121,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "final_scores": game.players if game else None
                             })
                             await engine.kill_lobby(game_id, player_id)
-                await manager.disconnect(game_id, websocket)
+                manager.disconnect(game_id, websocket)
                 break
     except WebSocketDisconnect:
         # Handle unexpected disconnects
@@ -131,7 +130,7 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 await game_task
             except Exception:
-                raise
+                print("Exception caught during socket main loop, exiting...")
             finally:
                 game = await engine.get_game(game_id)
                 if game:
@@ -140,7 +139,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "final_scores": game.players if game else None
                     })
                     await engine.kill_lobby(game_id, player_id)
-        await manager.disconnect(game_id, websocket)
+        manager.disconnect(game_id, websocket)
 
 # Background wrapper to run engine game loop
 async def run_game_task(game_id: str):
