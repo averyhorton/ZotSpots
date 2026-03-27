@@ -1,5 +1,5 @@
 # Socket Integration With Engine
-The client and the engine communicate with one another through the use of websockets. Both the client and the engine can send and recieve messages. 
+The client and the engine communicate with one another through the use of websockets. Both the client and the engine can send and recieve messages. The engine is hosted on Render.
 
 ## Server -> Client Messages
 Below is the list of messages the server sends to the client for rendering:
