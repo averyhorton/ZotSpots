@@ -12,7 +12,7 @@ import asyncio
 import websockets
 import json
 
-WS_URL = "ws://localhost:8000/ws"
+WS_URL = "wss://zotspots.onrender.com/ws"
 
 PLAYER_1_ID = "test-player-1"
 PLAYER_2_ID = "test-player-2"
