@@ -14,4 +14,4 @@ TABLE = "Locations"
 
 # 1. Load database credentials and boot up client
 load_dotenv()
-SUPABASE = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY")) 
+SUPABASE = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY")) 
