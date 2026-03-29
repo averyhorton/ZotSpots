@@ -11,4 +11,4 @@ ZotSpots is a fullstack app hosted on Firebase. The app was built with a Python 
 ## Beginning Development
 Make sure to install all dependencies in requirements.txt. Please update requirements.txt with any and all new packages used in any commits.
 
-We use [Render](https://dashboard.render.com/select-repo?type=blueprint&noreferrer=true) to host the game engine, and [Supabase](https://supabase.com/dashboard/project/hlckmuidsanicjjdpqbc) to host the locations database. Upon completion of development, make sure all environment variables and source code is sound before hosting on Firebase.
+We use [Render]([https://dashboard.render.com/select-repo?type=blueprint&noreferrer=true](https://dashboard.render.com/web/srv-d746ta75r7bs73cooi1g/logs?r=1h)) to host the game engine, and [Supabase]([https://supabase.com/dashboard/project/hlckmuidsanicjjdpqbc](https://supabase.com/dashboard/project/hlckmuidsanicjjdpqbc/editor/17541)) to host the locations database. Upon completion of development, make sure all environment variables and source code is sound before hosting on Firebase.
