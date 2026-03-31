@@ -54,6 +54,15 @@
   }
 }
 
+@utility text-glow {
+  @apply relative;
+  text-shadow: 0 0 8px rgba(255, 210, 0, 1);
+}
+
+@utility card-hover {
+  @apply transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg;
+}
+
 @utility container {
   margin-inline: auto;
   padding-inline: 2rem;
@@ -63,6 +72,36 @@
   @media (width >= 1024px) { max-width: 1024px; }
   @media (width >= 1280px) { max-width: 1280px; }
   @media (width >= 1400px) { max-width: 1400px; }
+}
+
+@utility text-default {
+  @apply font-mono text-glow
+}
+
+@utility button1 {
+  @apply bg-primary text-white font-mono px-4 py-2 rounded hover:scale-105 hover:bg-primary-dark transition-all duration-300
+}
+
+@utility button2 {
+  @apply bg-accent text-black font-mono px-4 py-2 rounded hover:scale-105 hover:bg-accent-dark transition-all duration-300
+}
+
+@utility button-default {
+  @apply bg-muted text-white font-mono px-4 py-2 rounded transition-all duration-300 hover:scale-105 hover:bg-accent-foreground
+}
+
+@utility input-default {
+  @apply border p-2 rounded w-full mb-2 font-mono hover:scale-102 bg-accent-light/50 transition-all duration-300
+}
+
+@utility input-glow {
+  @apply border border-primary rounded outline-none transition-all duration-300;
+  box-shadow: none;
+
+  &:focus {
+    @apply border-accent;
+    box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.25);
+  }
 }
 
 #root {

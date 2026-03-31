@@ -50,6 +50,13 @@ export default function GameBoard({ gameId, playerId, mode }: GameBoardProps) {
 
   return (
     <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+        <img
+          src="/PetrGuessr.png"
+          alt="PetrGuessr"
+          className="mx-auto h-16 object-contain"
+        />
+      </header>
       <h1 className="text-xl font-bold mb-4">Round {round+1}</h1>
       <pre>{JSON.stringify(players, null, 2)}</pre>
       <button

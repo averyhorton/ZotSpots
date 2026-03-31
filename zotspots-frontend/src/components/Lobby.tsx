@@ -31,19 +31,25 @@ export default function Lobby({ setGameId, playerId, setMode }: LobbyProps) {
   }, [messages, setGameId]);
 
   return (
-    <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <div className="bg-card p-6 rounded shadow-md w-full max-w-lg">
+      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+        <img
+          src="/PetrGuessr.png"
+          alt="PetrGuessr"
+          className="mx-auto h-16 object-contain"
+        />
+      </header>
       <div className="flex gap-2 mb-4">
-        <h1 className="color-primary-dark">Header 1</h1> 
-        <h2 className="">Header 2</h2> 
-        <h3 className="">Header 3</h3> 
+        <h1 className="text-default">Header</h1> 
+        <body className="">body</body>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="button1"
           onClick={() => createGame("singleplayer")}
         >
           Create Singleplayer
         </button>
         <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
+          className="button2"
           onClick={() => createGame("multiplayer")}
         >
           Create Multiplayer
@@ -56,10 +62,10 @@ export default function Lobby({ setGameId, playerId, setMode }: LobbyProps) {
           placeholder="Enter Game ID"
           value={inputGameId}
           onChange={(e) => setInputGameId(e.target.value)}
-          className="border p-2 rounded w-full mb-2"
+          className="input-glow input-default"
         />
         <button
-          className="bg-gray-700 text-white px-4 py-2 rounded w-full"
+          className="button-default"
           onClick={joinGame}
         >
           Join Game
