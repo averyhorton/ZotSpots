@@ -33,6 +33,9 @@ export default function Lobby({ setGameId, playerId, setMode }: LobbyProps) {
   return (
     <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
       <div className="flex gap-2 mb-4">
+        <h1 className="color-primary-dark">Header 1</h1> 
+        <h2 className="">Header 2</h2> 
+        <h3 className="">Header 3</h3> 
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded"
           onClick={() => createGame("singleplayer")}

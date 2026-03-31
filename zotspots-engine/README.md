@@ -10,7 +10,6 @@ Below is the list of messages the server sends to the client for rendering:
 - `game_cancelled`: if a lobby is ended prematurely, alert the client
 - `error`: a server function failed; can come with many codes
     - `bad_connection`: a websocket failed to communicate
-    - ``
     - `critical_failure`: a major error happened during a round; details are provided in the message
 
 ## Server <- Client Messages
