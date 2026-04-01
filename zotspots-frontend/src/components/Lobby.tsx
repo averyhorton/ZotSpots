@@ -341,7 +341,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
                   <button
                     onClick={createSingleplayer}
-                    className="w-full group relative overflow-hidden rounded-xl border-2 border-primary bg-primary/5 p-5 text-left transition-all duration-300 hover:bg-primary hover:shadow-[0_0_20px_rgba(0,100,164,0.3)] mb-4"
+                    className="w-full group relative overflow-hidden card-hover rounded-xl border-2 border-primary bg-primary/5 p-5 text-left transition-all duration-300 hover:bg-primary hover:shadow-[0_0_20px_rgba(0,100,164,0.3)] mb-4"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">🎓</span>
@@ -360,7 +360,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
                   <button
                     onClick={() => setMode("multiplayer-create")}
-                    className="w-full group relative overflow-hidden rounded-xl border-2 border-accent bg-accent/5 p-5 text-left transition-all duration-300 hover:bg-accent hover:shadow-[0_0_20px_rgba(255,210,0,0.3)] mb-3"
+                    className="w-full group relative overflow-hidden card-hover rounded-xl border-2 border-accent bg-accent/5 p-5 text-left transition-all duration-300 hover:bg-accent hover:shadow-[0_0_20px_rgba(255,210,0,0.3)] mb-3"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">🏟️</span>
@@ -377,7 +377,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
                   <button
                     onClick={() => setMode("multiplayer-join")}
-                    className="w-full group relative overflow-hidden rounded-xl border-2 border-border bg-card p-5 text-left transition-all duration-300 hover:border-primary-light hover:shadow-md"
+                    className="w-full group relative overflow-hidden card-hover rounded-xl border-2 border-border bg-card p-5 text-left transition-all duration-300 hover:border-primary-light hover:shadow-md"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">🔗</span>
@@ -490,7 +490,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
                   <div className="flex items-start justify-between mb-6">
                     <div className="text-left">
-                      <h2 className="font-mono text-xl font-bold text-foreground tracking-tight">
+                      <h2 className="font-mono text-xl text-glow font-bold text-foreground tracking-tight">
                         {lobby.isSingleplayer ? "Singleplayer Lobby" : "Multiplayer Lobby"}
                       </h2>
                       <p className="font-mono text-xs text-muted mt-0.5">
