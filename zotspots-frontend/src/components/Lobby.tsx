@@ -39,11 +39,13 @@ function PlayerSlot({
   isYou,
   isEmpty,
   maxPlayers,
+  isHost,
 }: {
   player?: Player;
   isYou?: boolean;
   isEmpty?: boolean;
   maxPlayers: number;
+  isHost?: boolean;
 }) {
   if (isEmpty) {
     return (
@@ -68,7 +70,11 @@ function PlayerSlot({
     >
       <div
         className={`w-9 h-9 rounded-full flex items-center justify-center text-lg font-mono font-bold transition-colors ${
-          player?.name ? "bg-primary text-white" : "bg-border text-muted"
+          player?.name
+            ? isHost
+              ? "bg-primary text-white"
+              : "bg-accent text-black"
+            : "bg-border text-muted"
         }`}
       >
         {player?.name ? player.name[0].toUpperCase() : "?"}
@@ -536,12 +542,13 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
                       Players ({lobby.players.length}/{maxPlayers})
                     </p>
                     <div className="space-y-2">
-                      {lobby.players.map((p) => (
+                      {lobby.players.map((p, i) => (
                         <PlayerSlot
                           key={p.id}
                           player={p}
                           isYou={p.id === playerId}
                           maxPlayers={maxPlayers}
+                          isHost={i===0}
                         />
                       ))}
                       {Array.from({ length: maxPlayers - lobby.players.length }).map((_, i) => (

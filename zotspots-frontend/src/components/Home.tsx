@@ -38,7 +38,7 @@ export default function Home() {
                         <img
                             src="/UCI%20Map%20Phone%20Background.png"
                             alt="UCI Map Background"
-                            className="w-full h-full object-cover filter blur-[4px] scale-105 opacity-60"
+                            className="w-full h-full object-cover filter blur-xs scale-105 opacity-60"
                         />
                     </picture>
 
@@ -56,7 +56,7 @@ export default function Home() {
                     />
 
                     {/* Gradient Overlay for style and contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-primary-dark/70 via-primary-dark/40 to-background/90 z-10" />
+                    <div className="absolute inset-0 bg-linear-to-b from-primary-dark/70 via-primary-dark/40 to-background/90 z-10" />
                 </div>
 
                 {/* Hero Content */}
@@ -85,7 +85,7 @@ export default function Home() {
                         onClick={enterLobby}
                     >
                         {/* Shimmer effect */}
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 -translate-x-[150%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                        <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/40 to-transparent skew-x-12 -translate-x-[150%] group-hover:animate-[shimmer_1.5s_infinite]" />
                         <span className="relative flex items-center gap-3">
                             Play Now
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -108,7 +108,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
                         {/* Connecting Line (Desktop only) */}
-                        <div className="hidden md:block absolute top-[20%] left-[10%] right-[10%] h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent z-0" />
+                        <div className="hidden md:block absolute top-[20%] left-[10%] right-[10%] h-1 bg-linear-to-r from-transparent via-primary/20 to-transparent z-0" />
 
                         {/* Step 1 */}
                         <div className="flex flex-col items-center text-center p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:-translate-y-2 transition-transform duration-300 z-10 border border-white/50">
