@@ -68,7 +68,7 @@ export default function Home() {
                         className="md:hidden w-16 mb-4 opacity-80 animate-float drop-shadow-xl z-20"
                     />
                     <div className="mb-6 inline-block bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 text-xs md:text-sm text-accent-light uppercase tracking-[0.2em] font-bold shadow-xl">
-                        The UC Irvine Geo Guesser
+                        The UC Irvine GeoGuessr
                     </div>
 
                     <h1 className="text-7xl md:text-8xl lg:text-9xl font-black mb-6 text-white drop-shadow-[0_0_25px_rgba(255,210,0,0.3)] tracking-tight leading-none">
