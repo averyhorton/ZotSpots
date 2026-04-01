@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useWebSocket } from "../hooks/useWebSocket";
+import { useEffect, useState, useCallback } from "react";
 import type { WSMessage } from "../hooks/useWebSocket";
 
 interface GameBoardProps {
@@ -9,11 +8,38 @@ interface GameBoardProps {
   mode: "singleplayer" | "multiplayer";
 }
 
-export default function GameBoard({ gameId, playerId, mode }: GameBoardProps) {
-  const { messages, sendMessage } = useWebSocket("wss://zotspots.onrender.com/ws");
+export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps) {
+  const [messages, setMessages] = useState<WSMessage[]>([]);
   const [round, setRound] = useState(0);
   const [players, setPlayers] = useState<Record<string, any>>({});
   const [gameOver, setGameOver] = useState(false);
+
+  // Use either the passed WebSocket or ignore if null
+  const socket = ws;
+
+  const sendMessage = useCallback(
+    (msg: any) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(msg));
+      }
+    },
+    [socket]
+  );
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const msg: WSMessage = JSON.parse(event.data);
+      setMessages((prev) => [...prev, msg]);
+    };
+
+    socket.addEventListener("message", handleMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (mode === "singleplayer") {
@@ -22,7 +48,7 @@ export default function GameBoard({ gameId, playerId, mode }: GameBoardProps) {
   }, [mode, sendMessage]);
 
   useEffect(() => {
-    messages.forEach((msg: WSMessage) => {
+    messages.forEach((msg) => {
       switch (msg.type) {
         case "round_start":
           setRound(msg.round);
@@ -50,22 +76,8 @@ export default function GameBoard({ gameId, playerId, mode }: GameBoardProps) {
   }
 
   return (
-    <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-        <img
-          src="/PetrGuessr.png"
-          alt="PetrGuessr"
-          className="mx-auto h-16 object-contain"
-        />
-      </header>
-      <h1 className="text-xl font-bold mb-4">Round {round+1}</h1>
-      <pre>{JSON.stringify(players, null, 2)}</pre>
-      <button
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-        onClick={submitGuess}
-      >
-        Submit Guess
-      </button>
+    <div>
+
     </div>
   );
 }
