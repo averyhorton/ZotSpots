@@ -283,15 +283,15 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
                 <p className="text-3xl mb-4">⚠️</p>
                 <p className="font-mono font-bold text-foreground mb-1">Connection failed</p>
                 <p className="font-mono text-xs text-muted">
-                  The server may be unavailable. Please refresh and try again.
+                  The server is not responding. Please refresh and try again.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-3xl mb-4 animate-bounce">🔄</p>
-                <p className="font-mono font-bold text-foreground mb-1">Waking up the server…</p>
+                <p className="text-3xl mb-4 animate-bounce">🛜</p>
+                <p className="font-mono font-bold text-foreground mb-1">Connecting to game service…</p>
                 <p className="font-mono text-xs text-muted">
-                  Server spins down after inactivity. This usually takes 30–60 seconds.
+                  During periods of inactivity, the server may shut down. Reloading can take 30-60 seconds, after which the server will run normally.
                 </p>
                 <div className="mt-6 flex justify-center gap-1.5">
                   {[0, 1, 2].map((i) => (
