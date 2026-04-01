@@ -314,7 +314,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-        <Link to="/">
+        <Link to="/" onClick={leaveLobby}>
           <img
             src="/PetrGuessr.png"
             alt="PetrGuessr"
