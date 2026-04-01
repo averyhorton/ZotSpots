@@ -251,6 +251,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
   function leaveLobby() {
     send({ type: "disconnect", playerId: playerId });
+    console.log("Disconnected from Lobby.")
     setLobby(null);
     setMode("home");
     setPlayerName("");
