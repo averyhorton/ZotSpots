@@ -139,7 +139,7 @@ export default function Home() {
                             </div>
                             <h3 className="text-2xl font-black mb-4 text-primary-dark">Step 3: Score</h3>
                             <p className="text-muted leading-relaxed font-medium text-lg">
-                                The closer your pin is to the actual location, and the faster you place it, the higher your score. Compete to be the ultimate PetrGuessr!
+                                The closer your pin is to the actual location, the higher your score. Compete to be the ultimate PetrGuessr!
                             </p>
                         </div>
                     </div>
