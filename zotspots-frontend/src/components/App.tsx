@@ -13,7 +13,6 @@ export default function App() {
 
   useEffect(() => {
     const ws = new WebSocket(import.meta.env.VITE_RENDER_URL);
-    console.log("WS URL:", import.meta.env.VITE_RENDER_URL);
 
     ws.onopen = () => console.log("WebSocket connected");
     ws.onerror = (e) => console.error("WebSocket error", e);
