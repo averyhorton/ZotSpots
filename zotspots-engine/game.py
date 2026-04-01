@@ -5,6 +5,7 @@ from typing import Dict, Optional, List
 @dataclass
 class Game:
     id: str  # unique game ID
+    code: str # Joinable game ID if multiplayer
     players: Dict[str, dict] = field(default_factory=dict)  # player_id → info, e.g., {"score": 0}
     guesses: Dict[str, dict] = field(default_factory=dict)  # player_id → {"lat": float, "lng": float}. Dynamically resets after each round
     actual_location: Optional[dict] = None  # {"lat": float, "lng": float} for current round. Dynamically resets after each round
@@ -33,3 +34,9 @@ class Game:
 
         # Nobody has lost yet
         return None
+    
+    def get_id(self) -> str:
+        return self.id
+    
+    def get_code(self) -> str:
+        return self.code if self.mode == "multiplayer" else None

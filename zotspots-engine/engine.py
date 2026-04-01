@@ -6,6 +6,8 @@ from typing import Dict, Optional
 from game import Game
 from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE
 from sockets import manager
+import secrets
+import string
 
 """
 ** Game Engine Class **
@@ -14,20 +16,32 @@ from sockets import manager
 @dataclass
 class GameEngine:
     games: Dict[str, Game] = field(default_factory=dict)
+    code_game_mapping: Dict[str, str] = field(default_factory=dict)
     locks: Dict[str, asyncio.Lock] = field(default_factory=dict)
 
     async def create_game(self, mode: str) -> str:
         game_id = str(uuid.uuid4())
 
-        game = Game(id=game_id, mode=mode)
+        code = None
+        if mode == "multiplayer":
+            while True: # create unique code
+                code = self.encode()
+                if code not in self.code_game_mapping:
+                    break
+        game = Game(id=game_id, code=code, mode=mode)
 
         self.games[game_id] = game
+        self.code_game_mapping[code] = game_id
         self.locks[game_id] = asyncio.Lock()
 
         return game_id
 
     async def get_game(self, game_id: str) -> Optional[Game]:
         return self.games.get(game_id, None)
+
+    async def find_game(self, code: str) -> str:
+        # Utilized when joining a game
+        return self.get_game(self.code_game_mapping.get(code, None))
 
     async def join_game(self, game_id: str, player_id: str) -> bool:
         game = self.games.get(game_id)
@@ -55,6 +69,7 @@ class GameEngine:
     async def kill_lobby(self, game_id: str):
         # since removing a player kills a lobby, just kill the lobby
         game = self.games.get(game_id)
+        code = game.get_code()
         lock = self.locks.get(game_id)
         if not game or not lock:
             return None  # nothing to do
@@ -62,6 +77,7 @@ class GameEngine:
         async with lock:
             # delete game and lock from memory
             del self.games[game_id]
+            del self.code_game_mapping[code]
         del self.locks[game_id]
 
     async def start_round(self, game_id: str, actual_location: dict):
@@ -157,3 +173,8 @@ class GameEngine:
 
         penalty = int(MAX_POINTS * (scaled**3))
         return penalty # to be subtracted from their score
+
+    def encode(self, length=6) -> str:
+        # Creates a joinable code for a game
+        alphabet = string.ascii_uppercase + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(length))

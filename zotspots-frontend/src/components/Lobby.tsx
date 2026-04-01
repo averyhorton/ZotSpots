@@ -162,7 +162,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
   useEffect(() => {
     if (!ws) return;
-    console.log("WS in Lobby:", ws);
     ws.addEventListener("message", handleMessage);
     return () => ws.removeEventListener("message", handleMessage);
   }, [ws, handleMessage]);
@@ -175,7 +174,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
   function createSingleplayer() {
     send({ type: "create_game", mode: "singleplayer", playerId: playerId });
-    // Optimistic local state for demo / when ws is null
     if (ws) {
       setLobby({
         code: generateCode(),
@@ -372,7 +370,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                   >
                     ← Back
                   </button>
-                  <h2 className="font-mono text-2xl font-bold text-foreground mb-1 tracking-tight">
+                  <h2 className="font-mono text-2xl text-glow font-bold text-foreground mb-1 tracking-tight">
                     Create Lobby
                   </h2>
                   <p className="font-mono text-sm text-muted mb-8">

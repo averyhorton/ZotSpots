@@ -77,7 +77,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
 
   return (
     <div>
-
+      
     </div>
   );
 }

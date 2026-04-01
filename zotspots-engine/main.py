@@ -50,11 +50,20 @@ async def websocket_endpoint(websocket: WebSocket):
                 await manager.send_personal_message(websocket, {
                     "type": "game_created",
                     "game_id": game_id,
-                    "isSingleplayer": mode == "singleplayer"
+                    "isSingleplayer": mode == "singleplayer",
+                    "code": game.get_code()
                 })
             elif msg_type == "join_game":
-                game_id = data.get("game_id")
+                code = data.get("code")
                 player_id = data.get("player_id")
+                game_id = engine.find_game(code)
+                if not game_id:
+                    await manager.send_personal_message(websocket, {
+                        "type": "error",
+                        "reason": "bad_code",
+                        "message": "Lobby join failed."
+                    })
+                    continue
 
                 joined = await manager.connect(game_id, websocket)
                 if not joined:

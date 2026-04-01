@@ -47,19 +47,3 @@ export default function App() {
     </Routes>
   );
 }
-
-/*<div className="min-h-screen flex justify-center items-center p-4">
-      {!gameId ? (
-        <Lobby
-          ws={ws}
-          playerId={playerId}
-          onGameStart={(id, mode) => {
-            setGameId(id);
-            setMode(mode);
-          }}
-      />
-      ) : (
-        <GameBoard ws={ws} gameId={gameId} playerId={playerId} mode={mode!} />
-      )}
-    </div>
-*/
