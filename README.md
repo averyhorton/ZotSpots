@@ -1,5 +1,5 @@
 # PetrGuessr (formerly ZotSpots)
-PetrGuessr is a fullstack Geoguessr clone focused on UC Irvine and its various campus spots built by Avery Horton, Adam Gans, and Samuel Mellari. Click [this link (REPLACE WHEN DONE)](https://www.averyhorton.dev/) to play!
+PetrGuessr is a fullstack Geoguessr clone focused on UC Irvine and its various campus spots built by Avery Horton, Adam Gans, and Samuel Mallari. Click [this link (REPLACE WHEN DONE)](https://www.averyhorton.dev/) to play!
 
 ## Features
 To be updated when development concludes
