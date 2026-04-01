@@ -18,6 +18,7 @@ interface LobbyState {
 
 interface LobbyScreenProps {
   ws: WebSocket | null;
+  wsStatus: "connecting" | "open" | "error" | "closed"; 
   playerId: string;
   onGameStart: (gameId: string, mode: "singleplayer" | "multiplayer") => void;
 }
@@ -90,13 +91,16 @@ function PlayerSlot({
   );
 }
 
-export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenProps) {
+export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: LobbyScreenProps) {
   const [mode, setMode] = useState<LobbyMode>("home");
   const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [lobby, setLobby] = useState<LobbyState | null>(null);
+
+  const wsReady = wsStatus === "open";
+  const wsError = wsStatus === "error" || wsStatus === "closed";
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
@@ -262,11 +266,52 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
   const canStart =
     allNamed && lobbyFull && (lobby?.role === "host" || lobby?.isSingleplayer);
 
+  // If we are still waiting on the server spinning up, let the user know
+  if (!wsReady) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-card rounded-2xl shadow-lg border border-border p-10 text-center max-w-sm w-full mx-4">
+            <div className="h-1.5 w-full bg-linear-to-r from-primary via-primary-light to-accent rounded-t-sm -mt-10 mb-8" />
+            {wsError ? (
+              <>
+                <p className="text-3xl mb-4">⚠️</p>
+                <p className="font-mono font-bold text-foreground mb-1">Connection failed</p>
+                <p className="font-mono text-xs text-muted">
+                  The server may be unavailable. Please refresh and try again.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-3xl mb-4 animate-bounce">🔄</p>
+                <p className="font-mono font-bold text-foreground mb-1">Waking up the server…</p>
+                <p className="font-mono text-xs text-muted">
+                  Server spins down after inactivity. This usually takes 30–60 seconds.
+                </p>
+                <div className="mt-6 flex justify-center gap-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
         <img
           src="/PetrGuessr.png"
@@ -275,15 +320,11 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
         />
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex items-center justify-center pt-28 pb-12 px-4">
         <div className="w-full max-w-md">
-
-          {/* ── HOME ─────────────────────────────────────────────── */}
           {mode === "home" && (
             <div className="animate-[fade-in_0.5s_ease-out_forwards]">
               <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
-                {/* Card header accent */}
                 <div className="h-1.5 w-full bg-linear-to-r from-primary via-primary-light to-accent" />
 
                 <div className="p-8">
@@ -294,7 +335,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                     How do you want to play?
                   </p>
 
-                  {/* Singleplayer */}
                   <button
                     onClick={createSingleplayer}
                     className="w-full group relative overflow-hidden rounded-xl border-2 border-primary bg-primary/5 p-5 text-left transition-all duration-300 hover:bg-primary hover:shadow-[0_0_20px_rgba(0,100,164,0.3)] mb-4"
@@ -314,7 +354,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
                   <GlowDivider />
 
-                  {/* Multiplayer create */}
                   <button
                     onClick={() => setMode("multiplayer-create")}
                     className="w-full group relative overflow-hidden rounded-xl border-2 border-accent bg-accent/5 p-5 text-left transition-all duration-300 hover:bg-accent hover:shadow-[0_0_20px_rgba(255,210,0,0.3)] mb-3"
@@ -332,7 +371,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                     </div>
                   </button>
 
-                  {/* Multiplayer join */}
                   <button
                     onClick={() => setMode("multiplayer-join")}
                     className="w-full group relative overflow-hidden rounded-xl border-2 border-border bg-card p-5 text-left transition-all duration-300 hover:border-primary-light hover:shadow-md"
@@ -354,7 +392,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
             </div>
           )}
 
-          {/* ── MULTIPLAYER CREATE ────────────────────────────────── */}
           {mode === "multiplayer-create" && (
             <div className="animate-[fade-in_0.4s_ease-out_forwards]">
               <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
@@ -394,7 +431,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
             </div>
           )}
 
-          {/* ── MULTIPLAYER JOIN ──────────────────────────────────── */}
           {mode === "multiplayer-join" && (
             <div className="animate-[fade-in_0.4s_ease-out_forwards]">
               <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
@@ -442,14 +478,12 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
             </div>
           )}
 
-          {/* ── WAITING ROOM ──────────────────────────────────────── */}
           {mode === "waiting" && lobby && (
             <div className="animate-[fade-in_0.4s_ease-out_forwards]">
               <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
                 <div className="h-1.5 w-full bg-linear-to-r from-primary via-primary-light to-accent" />
                 <div className="p-8">
 
-                  {/* Lobby header */}
                   <div className="flex items-start justify-between mb-6">
                     <div className="text-left">
                       <h2 className="font-mono text-xl font-bold text-foreground tracking-tight">
@@ -471,7 +505,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                     </button>
                   </div>
 
-                  {/* Join code — multiplayer only */}
                   {lobby && !lobby.isSingleplayer && (
                     <div className="bg-primary/5 border border-primary/30 rounded-xl p-4 mb-6 flex items-center justify-between">
                       <div className="text-left">
@@ -494,7 +527,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
                   <GlowDivider />
 
-                  {/* Players */}
                   <div className="text-left mb-4">
                     <p className="font-mono text-xs text-muted uppercase tracking-widest mb-3">
                       Players ({lobby.players.length}/{maxPlayers})
@@ -516,7 +548,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
                   <GlowDivider />
 
-                  {/* Name input */}
                   {!me?.name ? (
                     <div className="text-left">
                       <label className="font-mono text-xs text-muted uppercase tracking-widest block mb-2">
@@ -557,7 +588,6 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                     </div>
                   )}
 
-                  {/* Start button */}
                   {(lobby.isSingleplayer || lobby.role === "host") && (
                     <button
                       onClick={startGame}
