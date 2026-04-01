@@ -22,10 +22,6 @@ interface LobbyScreenProps {
   onGameStart: (gameId: string, mode: "singleplayer" | "multiplayer") => void;
 }
 
-function generateCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
 function GlowDivider() {
   return (
     <div className="w-full flex items-center gap-3 my-6">
@@ -176,7 +172,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
     send({ type: "create_game", mode: "singleplayer", playerId: playerId });
     if (ws) {
       setLobby({
-        code: generateCode(),
+        code: "......",
         players: [{ id: playerId, name: "", ready: false }],
         role: null,
         isSingleplayer: true,
@@ -189,7 +185,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
     send({ type: "create_game", mode: "multiplayer", playerId: playerId });
     if (ws) {
       setLobby({
-        code: generateCode(),
+        code: "......",
         players: [{ id: playerId, name: "", ready: false }],
         role: "host",
         isSingleplayer: false,
@@ -476,7 +472,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
                   </div>
 
                   {/* Join code — multiplayer only */}
-                  {!lobby.isSingleplayer && (
+                  {lobby && !lobby.isSingleplayer && (
                     <div className="bg-primary/5 border border-primary/30 rounded-xl p-4 mb-6 flex items-center justify-between">
                       <div className="text-left">
                         <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">
