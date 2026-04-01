@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 
 type LobbyMode = "home" | "singleplayer" | "multiplayer-create" | "multiplayer-join" | "waiting";
 type MultiplayerRole = "host" | "guest" | null;
@@ -313,11 +314,13 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-        <img
-          src="/PetrGuessr.png"
-          alt="PetrGuessr"
-          className="mx-auto h-16 object-contain"
-        />
+        <Link to="/">
+          <img
+            src="/PetrGuessr.png"
+            alt="PetrGuessr"
+            className="mx-auto h-16 object-contain"
+          />
+        </Link>
       </header>
 
       <main className="flex-1 flex items-center justify-center pt-28 pb-12 px-4">
