@@ -3,6 +3,7 @@ import { useWebSocket } from "../hooks/useWebSocket";
 import type { WSMessage } from "../hooks/useWebSocket";
 
 interface GameBoardProps {
+  ws: WebSocket | null;
   gameId: string;
   playerId: string;
   mode: "singleplayer" | "multiplayer";

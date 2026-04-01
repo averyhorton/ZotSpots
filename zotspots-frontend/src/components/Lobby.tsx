@@ -162,6 +162,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
   useEffect(() => {
     if (!ws) return;
+    console.log("WS in Lobby:", ws);
     ws.addEventListener("message", handleMessage);
     return () => ws.removeEventListener("message", handleMessage);
   }, [ws, handleMessage]);
@@ -175,7 +176,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
   function createSingleplayer() {
     send({ type: "create_game", mode: "singleplayer", playerId: playerId });
     // Optimistic local state for demo / when ws is null
-    if (!ws) {
+    if (ws) {
       setLobby({
         code: generateCode(),
         players: [{ id: playerId, name: "", ready: false }],
@@ -188,7 +189,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
   function createMultiplayer() {
     send({ type: "create_game", mode: "multiplayer", playerId: playerId });
-    if (!ws) {
+    if (ws) {
       setLobby({
         code: generateCode(),
         players: [{ id: playerId, name: "", ready: false }],
@@ -206,7 +207,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
       return;
     }
     send({ type: "join_game", code, playerId: playerId });
-    if (!ws) {
+    if (ws) {
       setLobby({
         code,
         players: [
@@ -246,7 +247,7 @@ export default function LobbyScreen({ ws, playerId, onGameStart }: LobbyScreenPr
 
   function startGame() {
     send({ type: "start_game" });
-    if (!ws) onGameStart("null", "singleplayer");
+    if (ws) onGameStart("null", "singleplayer");
   }
 
   function leaveLobby() {

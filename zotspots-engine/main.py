@@ -49,7 +49,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 await engine.join_game(game_id, player_id)
                 await manager.send_personal_message(websocket, {
                     "type": "game_created",
-                    "game_id": game_id
+                    "game_id": game_id,
+                    "isSingleplayer": mode == "singleplayer"
                 })
             elif msg_type == "join_game":
                 game_id = data.get("game_id")
@@ -120,7 +121,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "type": "game_over",
                                 "final_scores": game.players if game else None
                             })
-                            await engine.kill_lobby(game_id, player_id)
+                            await engine.kill_lobby(game_id)
                 manager.disconnect(game_id, websocket)
                 break
     except WebSocketDisconnect:
@@ -138,7 +139,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "type": "game_over",
                         "final_scores": game.players if game else None
                     })
-                    await engine.kill_lobby(game_id, player_id)
+                    await engine.kill_lobby(game_id)
         manager.disconnect(game_id, websocket)
 
 # Background wrapper to run engine game loop
