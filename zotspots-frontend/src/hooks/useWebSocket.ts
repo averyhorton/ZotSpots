@@ -1,33 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 
-export interface WSMessage {
-  type: string;
-  [key: string]: any;
-}
-
 export const useWebSocket = (url: string) => {
   const ws = useRef<WebSocket | null>(null);
-  const [messages, setMessages] = useState<WSMessage[]>([]);
-  const [connected, setConnected] = useState(false);
+  const [status, setStatus] = useState<"connecting" | "open" | "error" | "closed">("connecting");
 
   useEffect(() => {
-    ws.current = new WebSocket(url);
+    const socket = new WebSocket(url);
+    ws.current = socket;
 
-    ws.current.onopen = () => setConnected(true);
+    socket.onopen = () => setStatus("open");
+    socket.onclose = () => setStatus("closed");
+    socket.onerror = () => setStatus("error");
 
-    ws.current.onmessage = (event) => {
-      const data: WSMessage = JSON.parse(event.data);
-      setMessages((prev) => [...prev, data]);
-    };
-
-    ws.current.onclose = () => setConnected(false);
-
-    return () => ws.current?.close();
+    return () => socket.close();
   }, [url]);
 
-  const sendMessage = (msg: WSMessage) => {
-    if (ws.current && connected) ws.current.send(JSON.stringify(msg));
+  const sendMessage = (msg: object) => {
+    ws.current?.send(JSON.stringify(msg));
   };
 
-  return { messages, sendMessage, connected };
+  return { ws: ws.current, status, sendMessage };
 };

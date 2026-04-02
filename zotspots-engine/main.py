@@ -225,7 +225,8 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 await game_task
             except Exception:
-                print("ERROR:   Exception caught during socket main loop, exiting...")
+                if DEBUG:
+                    print("ERROR:   Exception caught during socket main loop, exiting...")
             finally:
                 game = engine.get_game(game_id)
                 if game:
@@ -244,4 +245,5 @@ async def run_game_task(game_id: str):
         await run_game(engine, game_id)
     except asyncio.CancelledError:
         # If cancelled, let the calling websocket handler handle cleanup
-        raise
+        if DEBUG:
+            print("ERROR:   Game cancelled during execution.")
