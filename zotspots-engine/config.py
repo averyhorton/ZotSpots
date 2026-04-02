@@ -3,7 +3,7 @@ from supabase import create_client
 from dotenv import load_dotenv
 import os
 
-DEBUG = True
+DEBUG = False
 
 BASIC_PENALTY = 1000 # Penalty for both players when they fail to guess
 MAX_CAMPUS_DISTANCE = 2000 # UCI is more than 2k meters across, but this is a good median value since a lot of locations will be on the main campus
