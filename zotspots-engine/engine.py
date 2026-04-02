@@ -143,7 +143,7 @@ class GameEngine:
         if game.phase == "results":
             raise Exception("compute_results called multiple times in same round")
         results = {
-            "actual_location": game.actual_location,
+            "actual_location": {"lat": game.actual_location["lat"], "lng": game.actual_location["lng"]},
             "players": {}
         }
 
