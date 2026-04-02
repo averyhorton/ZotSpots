@@ -27,16 +27,12 @@ interface GameOverMsg {
 
 type GamePhase = "waiting" | "playing" | "results" | "game_over";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
-
 interface GameBoardProps {
   ws: WebSocket | null;
   gameId: string;
   playerId: string;
   mode: "singleplayer" | "multiplayer";
 }
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps) {
   const [phase, setPhase] = useState<GamePhase>("waiting");
@@ -105,8 +101,13 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
 
   function WaitingPanel() {
     return (
+      <div>
+        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+        </header>
       <div className="text-center">
         <p className="font-mono text-muted">Waiting for game to start…</p>
+      </div>
       </div>
     );
   }
@@ -114,6 +115,10 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   function PlayingPanel() {
     return (
       <div>
+        {/* TODO: display players/scores in header */}
+        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+        </header>
         {/* TODO: show currentRound.image, map for guess placement */}
         <p className="font-mono">Round {currentRound?.round}</p>
         <p className="font-mono text-sm text-muted">Image: {currentRound?.image}</p>
@@ -134,6 +139,10 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   function ResultsPanel() {
     return (
       <div>
+        {/* TODO: display players/scores in header */}
+        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+        </header>
         {/* TODO: show map with actual location + all player guesses + distances */}
         <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
         <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
@@ -157,8 +166,6 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     );
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
       {error && (
@@ -167,7 +174,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
         </div>
       )}
 
-      <div className="bg-card rounded-2xl shadow-lg border border-border p-8 w-full max-w-2xl">
+      <div>
         {phase === "waiting"   && <WaitingPanel />}
         {phase === "playing"   && <PlayingPanel />}
         {phase === "results"   && <ResultsPanel />}
