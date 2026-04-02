@@ -43,18 +43,33 @@ class GameEngine:
         # Utilized when joining a game
         return self.code_game_mapping.get(code, None)
 
-    async def join_game(self, game_id: str, player_id: str) -> bool:
+    async def join_game(self, game_id: str, player_id: str, websocket) -> bool:
         game = self.games.get(game_id)
         lock = self.locks.get(game_id)
 
         if not game or not lock:
+            await manager.send_personal_message(websocket, {
+                "type": "error",
+                "reason": "no_game",
+                "message": "Game ID associated with the given code is not valid/does not exist."
+            })
             return False
 
         async with lock:
             if game.phase != "waiting":
+                await manager.send_personal_message(websocket, {
+                    "type": "error",
+                    "reason": "game_in_progress",
+                    "message": "Cannot join game that has already started."
+                })
                 return False
             
             if len(game.players) >= 2: # currently, we cap games at 2 players
+                await manager.send_personal_message(websocket, {
+                    "type": "error",
+                    "reason": "lobby_full",
+                    "message": "Cannot join game with a full lobby"
+                })
                 return False
         
             if player_id in game.players:

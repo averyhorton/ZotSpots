@@ -148,8 +148,11 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           setMode("home");
           break;
         case "error":
+          console.log(msg)
           if (msg.code === "bad_connection") {
             setJoinError("Could not connect. Check your code and try again.");
+          } else if (msg.code === "no_game") {
+            setJoinError("Bad lobby code provided, cannot join a lobby.");
           } else {
             setJoinError(msg.detail || "An error occurred.");
           }
@@ -207,10 +210,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
     if (ws) {
       setLobby({
         code,
-        players: [
-          { id: "host-demo", name: "Host", ready: true },
-          { id: playerId, name: "", ready: false },
-        ],
+        players: [{ id: playerId, name: "", ready: false }],
         role: "guest",
         isSingleplayer: false,
       });

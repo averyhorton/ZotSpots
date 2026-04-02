@@ -14,6 +14,9 @@ Below is the list of messages the server sends to the client for rendering:
 - `error`: a server function failed; can come with many codes
     - `bad_code`: user gave a join code that mapped to no games
     - `bad_connection`: a websocket failed to communicate
+    - `no_game`: code was valid, but did not map to a valid game ID
+    - `lobby_full`: user attempted to join a lobby that was full
+    - `game_in_progress`: attempted to join a game that had already started
     - `critical_failure`: a major error happened during a round; details are provided in the message
 
 ## Server <- Client Messages

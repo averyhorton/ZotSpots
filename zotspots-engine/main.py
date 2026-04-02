@@ -46,7 +46,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
                 game.mode = mode
                 player_id = data.get("player_id")
-                await engine.join_game(game_id, player_id)
+                joined = await engine.join_game(game_id, player_id)
+                if not joined:
+                    continue
+
                 await manager.send_personal_message(websocket, {
                     "type": "game_created",
                     "game_id": game_id,
@@ -66,23 +69,21 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 joined = await manager.connect(game_id, websocket)
+                print(f"connections after join: {manager.connections}")
                 if not joined:
                     await manager.send_personal_message(websocket, {
                         "type": "error",
                         "reason": "bad_connection",
-                        "message": "Lobby join failed."
+                        "message": "Failed to connect."
                     })
                     continue
                 
-                joined_lobby = await engine.join_game(game_id, player_id)
+                joined_lobby = await engine.join_game(game_id, player_id, websocket)
+                print(f"join_game: code={code}, game_id={game_id}, player_id={player_id}")
                 if not joined_lobby:
-                    await manager.send_personal_message(websocket, {
-                        "type": "error",
-                        "reason": "no_game",
-                        "message": "Invalid game id given."
-                    })
                     continue
 
+                print(f"broadcasting lobby_updated to game_id={game_id}")
                 await manager.broadcast(game_id, {
                         "type": "lobby_updated",
                         "event": "player_joined",
