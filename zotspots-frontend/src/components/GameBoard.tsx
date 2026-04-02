@@ -42,6 +42,8 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
   const [hasGuessed, setHasGuessed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const panoRef = useRef<HTMLDivElement | null>(null);
+  const viewerRef = useRef<any>(null);
 
   // Ref so handleMessage always sees current phase without stale closure
   const phaseRef = useRef<GamePhase>("waiting");
@@ -113,25 +115,62 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   }
 
   function PlayingPanel() {
+    useEffect(() => {
+      if (!panoRef.current || !currentRound?.image) return;
+  
+      // Destroy previous viewer if it exists
+      if (viewerRef.current) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
+      
+      console.log("Loading panorama:", currentRound.image);
+      viewerRef.current = (window as any).pannellum.viewer(panoRef.current, {
+        type: "equirectangular",
+        panorama: `/${currentRound.image}`,
+        autoLoad: true,
+        showControls: false,
+      });
+      console.log("Finished loading!");
+
+      return () => {
+        if (viewerRef.current) {
+          viewerRef.current.destroy();
+          viewerRef.current = null;
+        }
+      };
+    }, [currentRound?.image]);
+  
     return (
       <div>
-        {/* TODO: display players/scores in header */}
-        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-        </header>
-        {/* TODO: show currentRound.image, map for guess placement */}
-        <p className="font-mono">Round {currentRound?.round}</p>
-        <p className="font-mono text-sm text-muted">Image: {currentRound?.image}</p>
-        <p className="font-mono text-sm text-muted">
-          {hasGuessed ? "Guess submitted — waiting for results…" : "Place your guess on the map."}
-        </p>
-        <button
-          onClick={submitGuess}
-          disabled={!guess || hasGuessed}
-          className="button1 mt-4"
-        >
-          Submit Guess
-        </button>
+        {/* Panorama container */}
+        <div className="relative w-screen h-screen">
+          <div
+            ref={panoRef}
+            className="absolute inset-0"
+          />
+        </div>
+
+        <div className="relative z-10 pointer-events-none">
+          <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50 pointer-events-auto">
+            <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+          </header>
+          <p className="font-mono mt-20">Round {currentRound?.round}</p>
+          <p className="font-mono text-sm text-muted mt-2">
+            {hasGuessed
+              ? "Guess submitted — waiting for results…"
+              : "Place your guess on the map."}
+          </p>
+          <div className="pointer-events-auto">
+            <button
+              onClick={submitGuess}
+              disabled={!guess || hasGuessed}
+              className="button1 mt-4"
+            >
+              Submit Guess
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
