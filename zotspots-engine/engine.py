@@ -4,7 +4,7 @@ import uuid
 import math
 from typing import Dict, Optional
 from game import Game
-from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE
+from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE, DEBUG
 from sockets import manager
 import secrets
 import string
@@ -48,6 +48,8 @@ class GameEngine:
         lock = self.locks.get(game_id)
 
         if not game or not lock:
+            if DEBUG:
+                print(f"ERROR:  [FAILED WITHIN ENGINE.PY] Game ID does not map to a lobby.")
             await manager.send_personal_message(websocket, {
                 "type": "error",
                 "reason": "no_game",
@@ -57,6 +59,8 @@ class GameEngine:
 
         async with lock:
             if game.phase != "waiting":
+                if DEBUG:
+                    print(f"ERROR:  Cannot join game in progress")
                 await manager.send_personal_message(websocket, {
                     "type": "error",
                     "reason": "game_in_progress",
@@ -65,6 +69,8 @@ class GameEngine:
                 return False
             
             if len(game.players) >= 2: # currently, we cap games at 2 players
+                if DEBUG:
+                    print(f"ERROR:  Cannot join a full lobby.")
                 await manager.send_personal_message(websocket, {
                     "type": "error",
                     "reason": "lobby_full",
@@ -87,6 +93,8 @@ class GameEngine:
         code = game.get_code()
         lock = self.locks.get(game_id)
         if not game or not lock:
+            if DEBUG:
+                print(f"DEBUG:  No game to kill.")
             return None  # nothing to do
 
         async with lock:
@@ -100,6 +108,8 @@ class GameEngine:
         lock = self.locks.get(game_id)
 
         if not game or not lock:
+            if DEBUG:
+                print(f"ERROR:  No game to start.")
             return
 
         async with lock:
@@ -113,10 +123,14 @@ class GameEngine:
         lock = self.locks.get(game_id)
 
         if not game or not lock:
+            if DEBUG:
+                print(f"ERROR:  No game to guess in.")
             return
 
         async with lock:
             if game.phase != "guessing":
+                if DEBUG:
+                    print(f"ERROR:  Couldn't process guess within guessing period.")
                 return
 
             if player_id not in game.guesses: # Only accept a guess if the player has not already guessed this round
@@ -136,10 +150,12 @@ class GameEngine:
         for player_id in game.players:
             # If a player didn't guess, penalize them
             if player_id not in game.guesses:
+                if DEBUG:
+                    print(f"DEBUG:  Player {player_id} did not guess, assessing penalty...")
                 game.players[player_id]["score"] -= BASIC_PENALTY
                 results["players"][player_id] = {
                     "guess": None,
-                    "distance": -1,
+                    "distance": None,
                     "score": game.players[player_id]["score"]
                 }
                 continue

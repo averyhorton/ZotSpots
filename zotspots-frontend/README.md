@@ -77,3 +77,9 @@ export default defineConfig([
   },
 ])
 ```
+
+# Backend Architecture
+
+## Debug Mode
+
+Debug mode can be activated by toggling the DEBUG variable in the config file to True. This will give output to the logs in the render server as the server performs actions. This should only be toggled on for the purpose of building/debugging, and should not be left on in releases.
