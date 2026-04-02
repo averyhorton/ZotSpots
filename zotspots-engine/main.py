@@ -93,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await manager.broadcast(game_id, {
                         "type": "lobby_updated",
                         "event": "player_joined",
-                        "player_id": player_id
+                        "players": [{"id": pid, "name": game.players[pid].get("name", "")} for pid in game.players]
                     })
             elif msg_type == "player_update":
                 player_id = data.get("player_id")

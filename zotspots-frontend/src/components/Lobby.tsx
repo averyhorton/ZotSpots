@@ -139,7 +139,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           break;
         }
         case "lobby_updated": {
-          console.log("lobby_updated:", msg);
+          console.log("lobby_updated full msg:", JSON.stringify(msg));
           setLobby((prev) =>
             prev
               ? {
