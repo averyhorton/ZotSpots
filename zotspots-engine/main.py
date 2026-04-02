@@ -69,6 +69,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 joined = await manager.connect(game_id, websocket)
+                game = engine.get_game(game_id)
                 print(f"connections after join: {manager.connections}")
                 if not joined:
                     await manager.send_personal_message(websocket, {
