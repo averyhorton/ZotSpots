@@ -27,6 +27,143 @@ interface GameOverMsg {
 
 type GamePhase = "waiting" | "playing" | "results" | "game_over";
 
+interface WaitingPanelProps {}
+
+interface PlayingPanelProps {
+  currentRound: RoundStartMsg | null;
+  timeLeft: number;
+  guess: { lat: number; lng: number } | null;
+  hasGuessed: boolean;
+  submitGuess: () => void;
+  panoRef: React.RefObject<HTMLDivElement | null>;
+}
+
+interface ResultsPanelProps {
+  roundResults: ResultsMsg | null;
+}
+
+interface GameOverPanelProps {
+  finalScores: GameOverMsg | null;
+}
+
+function WaitingPanel(_: WaitingPanelProps) {
+  return (
+    <div>
+      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+        <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+      </header>
+      <div className="text-center">
+        <p className="font-mono text-muted">Waiting for game to start…</p>
+      </div>
+    </div>
+  );
+}
+
+function PlayingPanel({
+  currentRound,
+  timeLeft,
+  guess,
+  hasGuessed,
+  submitGuess,
+  panoRef,
+}: PlayingPanelProps) {
+  const viewerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!panoRef.current || !currentRound?.image) return;
+
+    if (viewerRef.current) {
+      viewerRef.current.destroy();
+      viewerRef.current = null;
+    }
+
+    console.log("Loading panorama:", currentRound.image);
+    viewerRef.current = (window as any).pannellum.viewer(panoRef.current, {
+      type: "equirectangular",
+      panorama: `/${currentRound.image}`,
+      autoLoad: true,
+      showControls: false,
+    });
+    console.log("Finished loading!");
+
+    return () => {
+      if (viewerRef.current) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
+    };
+  }, [currentRound?.image]);
+
+  return (
+    <div>
+      <div className="relative w-screen h-screen">
+        <div ref={panoRef} className="absolute inset-0" />
+      </div>
+      {/* UI Overlay */}
+      <div className="relative z-10 pointer-events-none">
+        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50 pointer-events-auto">
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+        </header>
+        <div className="fixed top-30 right-6 z-50 pointer-events-none">
+          <p
+            className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
+              timeLeft <= 5 ? "text-red-400" : ""
+            }`}
+          >
+            ⏱️ {timeLeft}s
+          </p>
+        </div>
+        <p className="font-mono mt-20">Round {currentRound?.round}</p>
+        <p className="font-mono text-sm text-muted mt-2">
+          {hasGuessed
+            ? "Guess submitted — waiting for results…"
+            : "Place your guess on the map."}
+        </p>
+        <div className="pointer-events-auto">
+          <button
+            onClick={submitGuess}
+            disabled={!guess || hasGuessed}
+            className="button1 mt-4"
+          >
+            Submit Guess
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultsPanel({ roundResults }: ResultsPanelProps) {
+  return (
+    <div>
+      {/* TODO: display players/scores in header */}
+      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
+        <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
+      </header>
+      {/* TODO: show map with actual location + all player guesses + distances */}
+      <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
+      <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
+    </div>
+  );
+}
+
+function GameOverPanel({ finalScores }: GameOverPanelProps) {
+  return (
+    <div className="text-center">
+      {/* TODO: leaderboard, winner banner for multiplayer */}
+      <h2 className="font-mono text-2xl font-bold mb-2">Game Over</h2>
+      {finalScores?.winner && (
+        <p className="font-mono text-lg mb-4">
+          Winner:{" "}
+          {finalScores.final_scores[finalScores.winner.id]?.name ?? finalScores.winner.id}
+          {" "}({finalScores.winner.score} pts)
+        </p>
+      )}
+      <pre className="text-xs text-left">{JSON.stringify(finalScores?.final_scores, null, 2)}</pre>
+    </div>
+  );
+}
+
 interface GameBoardProps {
   ws: WebSocket | null;
   gameId: string;
@@ -41,9 +178,9 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [finalScores, setFinalScores] = useState<GameOverMsg | null>(null);
   const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
   const [hasGuessed, setHasGuessed] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [error, setError] = useState<string | null>(null);
   const panoRef = useRef<HTMLDivElement | null>(null);
-  const viewerRef = useRef<any>(null);
 
   // Ref so handleMessage always sees current phase without stale closure
   const phaseRef = useRef<GamePhase>("waiting");
@@ -51,36 +188,53 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     phaseRef.current = phase;
   }, [phase]);
 
-  const handleMessage = useCallback(
-    (event: MessageEvent) => {
-      const msg: WSMessage = JSON.parse(event.data);
+  // Countdown timer — lives here so it doesn't affect PlayingPanel's identity
+  useEffect(() => {
+    if (phase !== "playing") return;
 
-      switch (msg.type) {
-        case "round_start": {
-          const data = msg as WSMessage & RoundStartMsg;
-          setCurrentRound({ round: data.round, image: data.image });
-          setGuess(null);
-          setHasGuessed(false);
-          setPhase("playing");
-          break;
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(interval);
+          return 0;
         }
-        case "results": {
-          const data = msg as WSMessage & ResultsMsg;
-          setRoundResults({ round: data.round, results: data.results });
-          setPhase("results");
-          break;
-        }
-        case "game_over": {
-          const data = msg as WSMessage & GameOverMsg;
-          setFinalScores({ winner: data.winner, final_scores: data.final_scores });
-          setPhase("game_over");
-          break;
-        }
-        case "error": {
-          setError(msg.message ?? "An unknown error occurred.");
-          break;
-        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const handleMessage = useCallback((event: MessageEvent) => {
+    const msg: WSMessage = JSON.parse(event.data);
+
+    switch (msg.type) {
+      case "round_start": {
+        const data = msg as WSMessage & RoundStartMsg;
+        setCurrentRound({ round: data.round, image: data.image });
+        setGuess(null);
+        setHasGuessed(false);
+        setTimeLeft(30);
+        setPhase("playing");
+        break;
       }
+      case "results": {
+        const data = msg as WSMessage & ResultsMsg;
+        setRoundResults({ round: data.round, results: data.results });
+        setPhase("results");
+        break;
+      }
+      case "game_over": {
+        const data = msg as WSMessage & GameOverMsg;
+        setFinalScores({ winner: data.winner, final_scores: data.final_scores });
+        setPhase("game_over");
+        break;
+      }
+      case "error": {
+        setError(msg.message ?? "An unknown error occurred.");
+        break;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -95,115 +249,11 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     }
   }, [ws]);
 
-  function submitGuess() {
+  const submitGuess = useCallback(() => {
     if (!guess || hasGuessed) return;
     sendMessage({ type: "guess", lat: guess.lat, lng: guess.lng });
     setHasGuessed(true);
-  }
-
-  function WaitingPanel() {
-    return (
-      <div>
-        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-        </header>
-      <div className="text-center">
-        <p className="font-mono text-muted">Waiting for game to start…</p>
-      </div>
-      </div>
-    );
-  }
-
-  function PlayingPanel() {
-    useEffect(() => {
-      if (!panoRef.current || !currentRound?.image) return;
-  
-      // Destroy previous viewer if it exists
-      if (viewerRef.current) {
-        viewerRef.current.destroy();
-        viewerRef.current = null;
-      }
-      
-      console.log("Loading panorama:", currentRound.image);
-      viewerRef.current = (window as any).pannellum.viewer(panoRef.current, {
-        type: "equirectangular",
-        panorama: `/${currentRound.image}`,
-        autoLoad: true,
-        showControls: false,
-      });
-      console.log("Finished loading!");
-
-      return () => {
-        if (viewerRef.current) {
-          viewerRef.current.destroy();
-          viewerRef.current = null;
-        }
-      };
-    }, [currentRound?.image]);
-  
-    return (
-      <div>
-        {/* Panorama container */}
-        <div className="relative w-screen h-screen">
-          <div
-            ref={panoRef}
-            className="absolute inset-0"
-          />
-        </div>
-
-        <div className="relative z-10 pointer-events-none">
-          <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50 pointer-events-auto">
-            <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-          </header>
-          <p className="font-mono mt-20">Round {currentRound?.round}</p>
-          <p className="font-mono text-sm text-muted mt-2">
-            {hasGuessed
-              ? "Guess submitted — waiting for results…"
-              : "Place your guess on the map."}
-          </p>
-          <div className="pointer-events-auto">
-            <button
-              onClick={submitGuess}
-              disabled={!guess || hasGuessed}
-              className="button1 mt-4"
-            >
-              Submit Guess
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function ResultsPanel() {
-    return (
-      <div>
-        {/* TODO: display players/scores in header */}
-        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-        </header>
-        {/* TODO: show map with actual location + all player guesses + distances */}
-        <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
-        <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
-      </div>
-    );
-  }
-
-  function GameOverPanel() {
-    return (
-      <div className="text-center">
-        {/* TODO: leaderboard, winner banner for multiplayer */}
-        <h2 className="font-mono text-2xl font-bold mb-2">Game Over</h2>
-        {finalScores?.winner && (
-          <p className="font-mono text-lg mb-4">
-            Winner: {finalScores.final_scores[finalScores.winner.id]?.name ?? finalScores.winner.id}
-            {" "}({finalScores.winner.score} pts)
-          </p>
-        )}
-        <pre className="text-xs text-left">{JSON.stringify(finalScores?.final_scores, null, 2)}</pre>
-      </div>
-    );
-  }
+  }, [guess, hasGuessed, sendMessage]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
@@ -214,10 +264,19 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       <div>
-        {phase === "waiting"   && <WaitingPanel />}
-        {phase === "playing"   && <PlayingPanel />}
-        {phase === "results"   && <ResultsPanel />}
-        {phase === "game_over" && <GameOverPanel />}
+        {phase === "waiting" && <WaitingPanel />}
+        {phase === "playing" && (
+          <PlayingPanel
+            currentRound={currentRound}
+            timeLeft={timeLeft}
+            guess={guess}
+            hasGuessed={hasGuessed}
+            submitGuess={submitGuess}
+            panoRef={panoRef}
+          />
+        )}
+        {phase === "results" && <ResultsPanel roundResults={roundResults} />}
+        {phase === "game_over" && <GameOverPanel finalScores={finalScores} />}
       </div>
     </div>
   );
