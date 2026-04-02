@@ -21,3 +21,8 @@ export const useWebSocket = (url: string) => {
 
   return { ws: ws.current, status, sendMessage };
 };
+
+export interface WSMessage {
+  type: string;
+  [key: string]: any;
+}
