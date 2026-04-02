@@ -36,10 +36,10 @@ class GameEngine:
 
         return game_id
 
-    async def get_game(self, game_id: str) -> Optional[Game]:
+    def get_game(self, game_id: str) -> Optional[Game]:
         return self.games.get(game_id, None)
 
-    async def find_game(self, code: str) -> str:
+    def find_game(self, code: str) -> str:
         # Utilized when joining a game
         return self.code_game_mapping.get(code, None)
 
