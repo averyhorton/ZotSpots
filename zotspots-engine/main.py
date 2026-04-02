@@ -59,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             elif msg_type == "join_game":
                 code = data.get("code")
                 player_id = data.get("player_id")
-                game_id = engine.find_game(code)
+                game_id = await engine.find_game(code)
                 if not game_id:
                     await manager.send_personal_message(websocket, {
                         "type": "error",
