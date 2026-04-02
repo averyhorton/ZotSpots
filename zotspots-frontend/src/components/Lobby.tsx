@@ -168,7 +168,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           } else if (msg.code === "no_game") {
             setJoinError("Bad lobby code provided, cannot join a lobby.");
           } else {
-            setJoinError(msg.detail || "An error occurred.");
+            setJoinError(msg.message || "An error occurred.");
           }
           break;
       }
