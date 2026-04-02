@@ -124,6 +124,20 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           setMode("waiting");
           break;
         }
+        case "game_joined": {
+          setLobby({
+            code: msg.code,
+            players: msg.players.map((p: { id: string; name: string }) => ({
+              id: p.id,
+              name: p.name,
+              ready: false,
+            })),
+            role: "guest",
+            isSingleplayer: false,
+          });
+          setMode("waiting");
+          break;
+        }
         case "lobby_updated": {
           console.log("lobby_updated:", msg);
           setLobby((prev) =>
@@ -207,15 +221,6 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
       return;
     }
     send({ type: "join_game", code, playerId: playerId });
-    if (ws) {
-      setLobby({
-        code,
-        players: [{ id: playerId, name: "", ready: false }],
-        role: "guest",
-        isSingleplayer: false,
-      });
-      setMode("waiting");
-    }
   }
 
   function setName() {
