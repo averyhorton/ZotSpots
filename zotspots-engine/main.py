@@ -46,7 +46,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
                 game.mode = mode
                 player_id = data.get("player_id")
-                joined = await engine.join_game(game_id, player_id)
+                joined = await engine.join_game(game_id, player_id, websocket)
                 if not joined:
                     continue
 
