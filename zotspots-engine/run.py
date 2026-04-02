@@ -30,7 +30,7 @@ async def fetch_random_locations(n: int = 5) -> List[Dict]:
     return rows_response.data
 
 async def wait_for_all_guesses(engine: GameEngine, game_id: str):
-    game = await engine.get_game(game_id)
+    game = engine.get_game(game_id)
     lock = engine.locks.get(game_id)
 
     if not game or not lock:
@@ -43,7 +43,7 @@ async def wait_for_all_guesses(engine: GameEngine, game_id: str):
         await asyncio.sleep(0.5)
 
 async def run_game(engine: GameEngine, game_id: str):
-    game = await engine.get_game(game_id)
+    game = engine.get_game(game_id)
     lock = engine.locks.get(game_id)
     if not game or not lock:
         print(f"Game {game_id} not found")
