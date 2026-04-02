@@ -133,7 +133,7 @@ async def websocket_endpoint(websocket: WebSocket):
             elif msg_type == "start_game":
                 if DEBUG:
                     print(f"DEBUG:  Starting game {game_id}...")
-                manager.broadcast(game_id, {
+                await manager.broadcast(game_id, {
                     "type": "start",
                     "gameId": game_id
                 })
