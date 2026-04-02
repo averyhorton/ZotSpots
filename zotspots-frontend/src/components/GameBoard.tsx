@@ -37,23 +37,41 @@ type GamePhase = "waiting" | "playing" | "results" | "game_over";
 interface ScoreHeaderProps {
   left: PlayerInfo;
   right: PlayerInfo;
+  singleplayer?: boolean;
 }
 
-function Emblem({ name }: { name: string }) {
+function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yellow" }) {
   return (
-    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-mono font-bold text-sm shrink-0">
+    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm shrink-0 ${color === "yellow" ? "bg-yellow-400 text-black" : "bg-blue-500 text-white"}`}>
       {name.charAt(0).toUpperCase()}
     </div>
   );
 }
 
-function ScoreHeader({ left, right }: ScoreHeaderProps) {
+function ScoreHeader({ left, right, singleplayer = false }: ScoreHeaderProps) {
+  if (singleplayer) {
+    return (
+      <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50">
+        <div className="flex items-center justify-between px-6">
+          <div className="flex items-center gap-2">
+            <Emblem name={left.name} />
+            <div className="flex flex-col">
+              <span className="font-mono text-xs text-muted truncate">{left.name}</span>
+              <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+            </div>
+          </div>
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
+        </div>
+      </header>
+    );
+  }
+
   return (
-    <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50">
+    <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto">
       <div className="flex items-center justify-between px-6">
         {/* Left player (current player) */}
         <div className="flex items-center gap-2 w-36">
-          <Emblem name={left.name} />
+          <Emblem name={left.name} color="blue"/>
           <div className="flex flex-col">
             <span className="font-mono text-xs text-muted truncate">{left.name}</span>
             <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
@@ -69,7 +87,7 @@ function ScoreHeader({ left, right }: ScoreHeaderProps) {
             <span className="font-mono text-xs text-muted truncate">{right.name}</span>
             <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
           </div>
-          <Emblem name={right.name} />
+          <Emblem name={right.name} color="yellow"/>
         </div>
       </div>
     </header>
@@ -79,6 +97,7 @@ function ScoreHeader({ left, right }: ScoreHeaderProps) {
 interface WaitingPanelProps {
   left: PlayerInfo;
   right: PlayerInfo;
+  singleplayer?: boolean;
 }
 
 interface PlayingPanelProps {
@@ -90,22 +109,25 @@ interface PlayingPanelProps {
   panoRef: React.RefObject<HTMLDivElement | null>;
   left: PlayerInfo;
   right: PlayerInfo;
+  singleplayer?: boolean;
 }
 
 interface ResultsPanelProps {
   roundResults: ResultsMsg | null;
   left: PlayerInfo;
   right: PlayerInfo;
+  singleplayer?: boolean;
 }
 
 interface GameOverPanelProps {
   finalScores: GameOverMsg | null;
+  singleplayer?: boolean;
 }
 
-function WaitingPanel({ left, right }: WaitingPanelProps) {
+function WaitingPanel({ left, right, singleplayer = false}: WaitingPanelProps) {
   return (
     <div>
-      <ScoreHeader left={left} right={right} />
+      <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
       <div className="text-center">
         <p className="font-mono text-muted">Waiting for game to start…</p>
       </div>
@@ -122,6 +144,7 @@ function PlayingPanel({
   panoRef,
   left,
   right,
+  singleplayer
 }: PlayingPanelProps) {
   const viewerRef = useRef<any>(null);
 
@@ -157,7 +180,7 @@ function PlayingPanel({
       </div>
       {/* UI Overlay */}
       <div className="relative z-10 pointer-events-none">
-        <ScoreHeader left={left} right={right} />
+        <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
         <div className="fixed top-30 right-6 z-50 pointer-events-none">
           <p
             className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
@@ -187,10 +210,10 @@ function PlayingPanel({
   );
 }
 
-function ResultsPanel({ roundResults, left, right }: ResultsPanelProps) {
+function ResultsPanel({ roundResults, left, right, singleplayer = false}: ResultsPanelProps) {
   return (
     <div>
-      <ScoreHeader left={left} right={right} />
+      <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
       {/* TODO: show map with actual location + all player guesses + distances */}
       <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
       <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
@@ -198,7 +221,7 @@ function ResultsPanel({ roundResults, left, right }: ResultsPanelProps) {
   );
 }
 
-function GameOverPanel({ finalScores }: GameOverPanelProps) {
+function GameOverPanel({ finalScores, singleplayer = false }: GameOverPanelProps) {
   return (
     <div className="text-center">
       {/* TODO: leaderboard, winner banner for multiplayer */}
@@ -310,6 +333,8 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     return () => ws.removeEventListener("message", handleMessage);
   }, [ws, handleMessage]);
 
+  const singleplayer = mode === "singleplayer";
+
   const sendMessage = useCallback((msg: object) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg));
@@ -344,7 +369,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       <div>
-        {phase === "waiting" && <WaitingPanel left={left} right={right} />}
+        {phase === "waiting" && <WaitingPanel left={left} right={right} singleplayer={singleplayer}/>}
         {phase === "playing" && (
           <PlayingPanel
             currentRound={currentRound}
@@ -355,10 +380,11 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             panoRef={panoRef}
             left={left}
             right={right}
+            singleplayer={singleplayer}
           />
         )}
-        {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} />}
-        {phase === "game_over" && <GameOverPanel finalScores={finalScores} />}
+        {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer}/>}
+        {phase === "game_over" && <GameOverPanel finalScores={finalScores} singleplayer={singleplayer}/>}
       </div>
     </div>
   );
