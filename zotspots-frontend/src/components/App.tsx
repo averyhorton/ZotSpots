@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Lobby from "./Lobby";
 import Home from "./Home";
 import GameBoard from "./GameBoard";
+import NotFound from "./NotFound";
 
 type WsStatus = "connecting" | "open" | "error" | "closed";
 
@@ -72,6 +73,7 @@ export default function App() {
           )
         }
       />
+      <Route path="/*" element={<NotFound />}></Route>
     </Routes>
   );
 }
