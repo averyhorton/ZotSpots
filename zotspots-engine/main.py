@@ -133,6 +133,10 @@ async def websocket_endpoint(websocket: WebSocket):
             elif msg_type == "start_game":
                 if DEBUG:
                     print(f"DEBUG:  Starting game {game_id}...")
+                manager.broadcast(game_id, {
+                    "type": "start",
+                    "gameId": game_id
+                })
                 game = engine.get_game(game_id)
                 if game_id and game.phase == "waiting":
                     game_task = asyncio.create_task(run_game_task(game_id))

@@ -154,7 +154,12 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           );
           break;
         }
+        case "start":
+          console.log("Starting game: ", msg.gameId);
+          onGameStart(msg.gameId, lobby?.isSingleplayer ? "singleplayer" : "multiplayer");
+          break;
         case "round_start":
+          console.log("Starting round: ", msg.round)
           onGameStart(msg.gameId, lobby?.isSingleplayer ? "singleplayer" : "multiplayer");
           break;
         case "game_cancelled":
