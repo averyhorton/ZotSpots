@@ -67,7 +67,8 @@ async def run_game(engine: GameEngine, game_id: str):
             await manager.broadcast(game_id, {
                 "type": "round_start",
                 "round": idx + 1,
-                "image": location["image_file"]
+                "image": location["image_file"],
+                "players": game.players
             })
 
             # Wait for all players to submit guesses or timeout
