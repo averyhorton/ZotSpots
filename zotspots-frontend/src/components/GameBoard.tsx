@@ -51,7 +51,7 @@ function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yell
 function ScoreHeader({ left, right, singleplayer = false }: ScoreHeaderProps) {
   if (singleplayer) {
     return (
-      <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50">
+      <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto">
         <div className="flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
             <Emblem name={left.name} />
