@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 
 type LobbyMode = "home" | "singleplayer" | "multiplayer-create" | "multiplayer-join" | "waiting";
@@ -105,6 +105,7 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [lobby, setLobby] = useState<LobbyState | null>(null);
+  const lobbyRef = useRef<LobbyState | null>(null);
 
   const wsReady = wsStatus === "open";
   const wsError = wsStatus === "error" || wsStatus === "closed";
@@ -155,12 +156,12 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           break;
         }
         case "start":
-          console.log("Starting game: ", msg.gameId);
-          onGameStart(msg.gameId, lobby?.isSingleplayer ? "singleplayer" : "multiplayer");
+          console.log("Starting game: ", msg.gameId, " ", lobbyRef?.current?.isSingleplayer ? "singleplayer" : "multiplayer");
+          onGameStart(msg.gameId, lobbyRef?.current?.isSingleplayer ? "singleplayer" : "multiplayer");
           break;
         case "round_start":
-          console.log("Starting round: ", msg.round)
-          onGameStart(msg.gameId, lobby?.isSingleplayer ? "singleplayer" : "multiplayer");
+          console.log("Starting round: ", msg.round, " ", lobbyRef?.current?.isSingleplayer ? "singleplayer" : "multiplayer")
+          onGameStart(msg.gameId, lobbyRef?.current?.isSingleplayer ? "singleplayer" : "multiplayer");
           break;
         case "game_cancelled":
           setLobby(null);
@@ -186,6 +187,10 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
     ws.addEventListener("message", handleMessage);
     return () => ws.removeEventListener("message", handleMessage);
   }, [ws, handleMessage]);
+
+  useEffect(() => {
+    lobbyRef.current = lobby;
+  }, [lobby]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -254,7 +259,6 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
 
   function startGame() {
     send({ type: "start_game" });
-    if (ws) onGameStart("null", "singleplayer");
   }
 
   function leaveLobby() {
