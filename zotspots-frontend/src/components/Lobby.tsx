@@ -124,25 +124,17 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
           setMode("waiting");
           break;
         }
-        case "player_joined": {
-          setLobby((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  players: [...prev.players, { id: msg.playerId, name: "", ready: false }],
-                }
-              : prev
-          );
-          break;
-        }
         case "lobby_updated": {
+          console.log("lobby_updated:", msg);
           setLobby((prev) =>
             prev
               ? {
                   ...prev,
-                  players: prev.players.map((p) =>
-                    p.id === msg.playerId ? { ...p, name: msg.name } : p
-                  ),
+                  players: msg.players.map((p: { id: string; name: string }) => ({
+                    id: p.id,
+                    name: p.name,
+                    ready: false,
+                  })),
                 }
               : prev
           );

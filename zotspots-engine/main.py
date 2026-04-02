@@ -84,8 +84,20 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 await manager.broadcast(game_id, {
-                        "type": "player_joined",
+                        "type": "lobby_updated",
+                        "event": "player_joined",
                         "player_id": player_id
+                    })
+            elif msg_type == "player_update":
+                player_id = data.get("player_id")
+                name = data.get("name", "Player")
+                game = await engine.get_game(game_id)
+                if game and player_id in game.players:
+                    game.players[player_id]["name"] = name # adds player name to their dict, which also holds their score
+                    await manager.broadcast(game_id, {
+                        "type": "lobby_updated",
+                        "event": "player_updated",
+                        "players": [{"id": pid, "name": game.players[pid].get("name", "")} for pid in game.players]
                     })
             elif msg_type == "start_game":
                 game = await engine.get_game(game_id)

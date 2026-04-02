@@ -5,6 +5,8 @@ The client and the engine communicate with one another through the use of websoc
 Below is the list of messages the server sends to the client for rendering:
 - `game_created`: a lobby has been initialized
 - `lobby_updated`: a lobby has received updates that need reflection in the backend
+    - `player_joined`: Host needs to rerender lobby with all players
+    - `player_updated`: Player gave a name and is ready to play
 - `round_start`: initializes each round of the game
 - `results`: returns the results of a round, which includes the round number and the round payload (distances, scores, etc)
 - `game_over`: ends a game (and declares a winner if multiplayer), and kills the lobby
@@ -18,6 +20,7 @@ Below is the list of messages the server sends to the client for rendering:
 Below is the list of messages the client sends to the server for processing:
 - `create_game`: creates a new lobby for either singleplayer or multiplayer depending on user input
 - `join_game`: attempts to join a lobby using a code given by the user
+- `player_update`: A player has updated their name to indicate they are ready to play
 - `start_game`: starts the game loop
 - `guess`: submits a guess for a player
 - `disconnect`: removes a player from the lobby

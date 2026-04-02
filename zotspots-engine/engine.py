@@ -41,7 +41,7 @@ class GameEngine:
 
     async def find_game(self, code: str) -> str:
         # Utilized when joining a game
-        return self.get_game(self.code_game_mapping.get(code, None))
+        return self.code_game_mapping.get(code, None)
 
     async def join_game(self, game_id: str, player_id: str) -> bool:
         game = self.games.get(game_id)
