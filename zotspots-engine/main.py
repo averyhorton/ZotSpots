@@ -137,7 +137,21 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
                 results = await engine.submit_guess(game_id, player_id, lat, lng)
             elif msg_type == "disconnect":
+                if game.phase == "waiting":
+                    # If we are in the lobby, allow quits and rejoins
+                    del game.players[player_id]
+                    if not game.players:
+                        await engine.kill_lobby(game_id)
+                        continue
+                    await manager.broadcast(game_id, {
+                        "type": "lobby_updated",
+                        "event": "player_updated",
+                        "players": [{"id": pid, "name": game.players[pid].get("name", "")} for pid in game.players]
+                    })
+                    manager.disconnect(game_id, websocket)
+                    continue
                 if game_task:
+                    # if we are in main game execution, leaving should kill the lobby
                     game_task.cancel()
                     try:
                         await game_task
