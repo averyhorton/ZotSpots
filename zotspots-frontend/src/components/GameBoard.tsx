@@ -10,6 +10,7 @@ interface PlayerResult {
 interface RoundStartMsg {
   round: number;
   image: string;
+  players: Record<string, { name: string }>;
 }
 
 interface ResultsMsg {
@@ -25,9 +26,60 @@ interface GameOverMsg {
   final_scores: Record<string, { name: string; score: number }>;
 }
 
+interface PlayerInfo {
+  id: string;
+  name: string;
+  score: number;
+}
+
 type GamePhase = "waiting" | "playing" | "results" | "game_over";
 
-interface WaitingPanelProps {}
+interface ScoreHeaderProps {
+  left: PlayerInfo;
+  right: PlayerInfo;
+}
+
+function Emblem({ name }: { name: string }) {
+  return (
+    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-mono font-bold text-sm shrink-0">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function ScoreHeader({ left, right }: ScoreHeaderProps) {
+  return (
+    <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50">
+      <div className="flex items-center justify-between px-6">
+        {/* Left player (current player) */}
+        <div className="flex items-center gap-2 w-36">
+          <Emblem name={left.name} />
+          <div className="flex flex-col">
+            <span className="font-mono text-xs text-muted truncate">{left.name}</span>
+            <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+          </div>
+        </div>
+
+        {/* Logo divider */}
+        <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
+
+        {/* Right player (opponent) */}
+        <div className="flex items-center gap-2 w-36 justify-end">
+          <div className="flex flex-col items-end">
+            <span className="font-mono text-xs text-muted truncate">{right.name}</span>
+            <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
+          </div>
+          <Emblem name={right.name} />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+interface WaitingPanelProps {
+  left: PlayerInfo;
+  right: PlayerInfo;
+}
 
 interface PlayingPanelProps {
   currentRound: RoundStartMsg | null;
@@ -36,22 +88,24 @@ interface PlayingPanelProps {
   hasGuessed: boolean;
   submitGuess: () => void;
   panoRef: React.RefObject<HTMLDivElement | null>;
+  left: PlayerInfo;
+  right: PlayerInfo;
 }
 
 interface ResultsPanelProps {
   roundResults: ResultsMsg | null;
+  left: PlayerInfo;
+  right: PlayerInfo;
 }
 
 interface GameOverPanelProps {
   finalScores: GameOverMsg | null;
 }
 
-function WaitingPanel(_: WaitingPanelProps) {
+function WaitingPanel({ left, right }: WaitingPanelProps) {
   return (
     <div>
-      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-        <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-      </header>
+      <ScoreHeader left={left} right={right} />
       <div className="text-center">
         <p className="font-mono text-muted">Waiting for game to start…</p>
       </div>
@@ -66,6 +120,8 @@ function PlayingPanel({
   hasGuessed,
   submitGuess,
   panoRef,
+  left,
+  right,
 }: PlayingPanelProps) {
   const viewerRef = useRef<any>(null);
 
@@ -101,13 +157,11 @@ function PlayingPanel({
       </div>
       {/* UI Overlay */}
       <div className="relative z-10 pointer-events-none">
-        <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50 pointer-events-auto">
-          <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-        </header>
+        <ScoreHeader left={left} right={right} />
         <div className="fixed top-30 right-6 z-50 pointer-events-none">
           <p
-            className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 ${
-              timeLeft <= 5 ? "text-red-400" : "text-white"
+            className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
+              timeLeft <= 5 ? "text-red-400" : ""
             }`}
           >
             ⏱️ {timeLeft}s
@@ -133,13 +187,10 @@ function PlayingPanel({
   );
 }
 
-function ResultsPanel({ roundResults }: ResultsPanelProps) {
+function ResultsPanel({ roundResults, left, right }: ResultsPanelProps) {
   return (
     <div>
-      {/* TODO: display players/scores in header */}
-      <header className="w-full bg-card shadow-sm py-4 fixed top-0 left-0 z-50">
-        <img src="/PetrGuessr.png" alt="PetrGuessr" className="mx-auto h-16 object-contain" />
-      </header>
+      <ScoreHeader left={left} right={right} />
       {/* TODO: show map with actual location + all player guesses + distances */}
       <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
       <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
@@ -180,6 +231,8 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [hasGuessed, setHasGuessed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const [error, setError] = useState<string | null>(null);
+  const [players, setPlayers] = useState<Record<string, { name: string }>>({});
+  const [scores, setScores] = useState<Record<string, number>>({});
   const panoRef = useRef<HTMLDivElement | null>(null);
 
   // Ref so handleMessage always sees current phase without stale closure
@@ -211,7 +264,13 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     switch (msg.type) {
       case "round_start": {
         const data = msg as WSMessage & RoundStartMsg;
-        setCurrentRound({ round: data.round, image: data.image });
+        setCurrentRound({ round: data.round, image: data.image, players: data.players });
+        setPlayers(data.players);
+        // Seed scores at 5000 on the first round only
+        setScores((prev) => {
+          if (Object.keys(prev).length > 0) return prev;
+          return Object.fromEntries(Object.keys(data.players).map((id) => [id, 5000]));
+        });
         setGuess(null);
         setHasGuessed(false);
         setTimeLeft(30);
@@ -221,6 +280,14 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       case "results": {
         const data = msg as WSMessage & ResultsMsg;
         setRoundResults({ round: data.round, results: data.results });
+        // Update scores from results payload
+        setScores((prev) => {
+          const next = { ...prev };
+          for (const [id, result] of Object.entries(data.results.players)) {
+            next[id] = result.score;
+          }
+          return next;
+        });
         setPhase("results");
         break;
       }
@@ -255,6 +322,19 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     setHasGuessed(true);
   }, [guess, hasGuessed, sendMessage]);
 
+  // Derive left (self) and right (opponent) for the score header
+  const opponentId = Object.keys(players).find((id) => id !== playerId) ?? "";
+  const left: PlayerInfo = {
+    id: playerId,
+    name: players[playerId]?.name ?? "You",
+    score: scores[playerId] ?? 5000,
+  };
+  const right: PlayerInfo = {
+    id: opponentId,
+    name: players[opponentId]?.name ?? "Opponent",
+    score: scores[opponentId] ?? 5000,
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
       {error && (
@@ -264,7 +344,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       <div>
-        {phase === "waiting" && <WaitingPanel />}
+        {phase === "waiting" && <WaitingPanel left={left} right={right} />}
         {phase === "playing" && (
           <PlayingPanel
             currentRound={currentRound}
@@ -273,9 +353,11 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             hasGuessed={hasGuessed}
             submitGuess={submitGuess}
             panoRef={panoRef}
+            left={left}
+            right={right}
           />
         )}
-        {phase === "results" && <ResultsPanel roundResults={roundResults} />}
+        {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} />}
         {phase === "game_over" && <GameOverPanel finalScores={finalScores} />}
       </div>
     </div>
