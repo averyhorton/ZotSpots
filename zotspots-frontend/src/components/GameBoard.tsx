@@ -98,6 +98,7 @@ interface WaitingPanelProps {
   left: PlayerInfo;
   right: PlayerInfo;
   singleplayer?: boolean;
+  onDisconnect: () => void;
 }
 
 interface PlayingPanelProps {
@@ -110,6 +111,7 @@ interface PlayingPanelProps {
   left: PlayerInfo;
   right: PlayerInfo;
   singleplayer?: boolean;
+  onDisconnect: () => void;
 }
 
 interface ResultsPanelProps {
@@ -144,7 +146,8 @@ function PlayingPanel({
   panoRef,
   left,
   right,
-  singleplayer
+  singleplayer,
+  onDisconnect
 }: PlayingPanelProps) {
   const viewerRef = useRef<any>(null);
 
@@ -181,7 +184,7 @@ function PlayingPanel({
       {/* UI Overlay */}
       <div className="relative z-10 pointer-events-none">
         <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
-        <div className="fixed top-30 right-6 z-50 pointer-events-none">
+        <div className="fixed top-20 left-2 z-50 pointer-events-none">
           <p
             className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
               timeLeft <= 5 ? "text-red-400" : ""
@@ -190,19 +193,12 @@ function PlayingPanel({
             ⏱️ {timeLeft}s
           </p>
         </div>
-        <p className="font-mono mt-20">Round {currentRound?.round}</p>
-        <p className="font-mono text-sm text-muted mt-2">
-          {hasGuessed
-            ? "Guess submitted — waiting for results…"
-            : "Place your guess on the map."}
-        </p>
-        <div className="pointer-events-auto">
+        <div className="fixed top-20 right-2 z-50 pointer-events-auto">
           <button
-            onClick={submitGuess}
-            disabled={!guess || hasGuessed}
-            className="button1 mt-4"
+            onClick={onDisconnect}
+            className="w-9 h-9 p-5 flex items-center justify-center rounded-lg bg-black/60 text-red-500 hover:bg-red-600 hover:text-white transition-colors font-bold text-2xl"
           >
-            Submit Guess
+            ✕
           </button>
         </div>
       </div>
@@ -369,7 +365,14 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       <div>
-        {phase === "waiting" && <WaitingPanel left={left} right={right} singleplayer={singleplayer}/>}
+        {phase === "waiting" && <WaitingPanel 
+          left={left} 
+          right={right} 
+          singleplayer={singleplayer}
+          onDisconnect={() => {
+            window.location.href = "/play";
+          }}
+        />}
         {phase === "playing" && (
           <PlayingPanel
             currentRound={currentRound}
@@ -381,6 +384,9 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             left={left}
             right={right}
             singleplayer={singleplayer}
+            onDisconnect={() => {
+              window.location.href = "/play";
+            }}
           />
         )}
         {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer}/>}
