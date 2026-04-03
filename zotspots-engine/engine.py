@@ -138,6 +138,11 @@ class GameEngine:
                     "lat": lat,
                     "lng": lng
                 }
+                await manager.broadcast(game_id, {
+                    "type": "guess_processed",
+                    "playerId": player_id,
+                    "name": game.players[player_id]["name"]
+                })
 
     def compute_results(self, game: Game) -> dict:
         if game.phase == "results":

@@ -9,6 +9,7 @@ Below is the list of messages the server sends to the client for rendering:
     - `player_updated`: Player gave a name and is ready to play
 - `start`: Sends a ping to the client to transition both to the Game Board
 - `round_start`: initializes each round of the game
+- `guess_processed`: User has submitted a guess, ping sent for frontend rendering
 - `results`: returns the results of a round, which includes the round number and the round payload (distances, scores, etc)
 - `game_over`: ends a game (and declares a winner if multiplayer), and kills the lobby
 - `game_cancelled`: if a lobby is ended prematurely, alert the client

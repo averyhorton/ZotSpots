@@ -14,6 +14,11 @@ interface RoundStartMsg {
   players: Record<string, { name: string }>;
 }
 
+interface GuessProcessedMsg {
+  playerId: string;
+  name: string;
+}
+
 interface ResultsMsg {
   round: number;
   results: {
@@ -274,6 +279,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [players, setPlayers] = useState<Record<string, { name: string }>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
   const [pulsing, setPulsing] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
   const panoRef = useRef<HTMLDivElement | null>(null);
 
   // Ref so handleMessage always sees current phase without stale closure
@@ -318,6 +324,14 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
         setPhase("playing");
         break;
       }
+      case "guess_processed":
+        console.log("Received guess!")
+        const data = msg as WSMessage & GuessProcessedMsg;
+        if (data.playerId !== playerId) {
+          setNotification(`${data.name} has guessed!`);
+          setTimeout(() => setNotification(null), 3000);
+        }
+        break;
       case "results": {
         const data = msg as WSMessage & ResultsMsg;
         setRoundResults({ round: data.round, results: data.results });
@@ -389,6 +403,14 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 font-mono text-sm text-red-700 max-w-md w-full">
           ⚠️ {error}
+        </div>
+      )}
+
+      {notification && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50
+          bg-black/70 text-white font-mono text-sm px-5 py-2 rounded-full
+          shadow-lg animate-fade-in-down">
+          🎯 {notification}
         </div>
       )}
 
