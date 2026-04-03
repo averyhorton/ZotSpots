@@ -378,12 +378,11 @@ function GameOverPanel({ finalScores, singleplayer = false }: GameOverPanelProps
 
 interface GameBoardProps {
   ws: WebSocket | null;
-  gameId: string;
   playerId: string;
   mode: "singleplayer" | "multiplayer";
 }
 
-export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps) {
+export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
   const [phase, setPhase] = useState<GamePhase>("waiting");
   const [currentRound, setCurrentRound] = useState<RoundStartMsg | null>(null);
   const [roundResults, setRoundResults] = useState<ResultsMsg | null>(null);
@@ -399,6 +398,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [opponentHasGuessed, setOpponentHasGuessed] = useState(false);
   const [opponentGuessPulse, setOpponentGuessPulse] = useState(false);
   const panoRef = useRef<HTMLDivElement | null>(null);
+  const resultsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const phaseRef = useRef<GamePhase>("waiting");
   useEffect(() => {
@@ -463,10 +463,16 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
           }
           return next;
         });
-        setTimeout(() => setPhase("results"), 500);
+        // Store the timeout so game_over can cancel it
+        resultsTimeoutRef.current = setTimeout(() => setPhase("results"), 500);
         break;
       }
       case "game_over": {
+        // Cancel any pending phase("results") transition
+        if (resultsTimeoutRef.current) {
+          clearTimeout(resultsTimeoutRef.current);
+          resultsTimeoutRef.current = null;
+        }
         const data = msg as WSMessage & GameOverMsg;
         setFinalScores({ winner: data.winner, final_scores: data.final_scores });
         setPhase("game_over");

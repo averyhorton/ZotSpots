@@ -114,7 +114,7 @@ const PodiumBar = ({ player, position, finalHeight, delay, isWinner }: { player?
           )}
           <div className="flex items-center gap-1.5 mb-1 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
             <MedalIcon color={medalColor} />
-            <span className="font-mono font-bold text-white text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">{player.name}</span>
+            <span className="font-mono font-bold text-white text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-20">{player.name}</span>
           </div>
           <p className={`font-mono font-black ${isWinner ? 'text-2xl text-accent text-glow' : 'text-xl text-white'} tracking-tight`}>
             {player.score.toLocaleString()}
@@ -164,7 +164,9 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
   }, [isMultiplayer, players.length]);
 
   const handlePlayAgain = () => window.location.reload();
-  const handleHome = () => navigate("/");
+  const handleHome = () => {
+    window.location.href = "/";
+  };
 
   const p1 = players[0];
   const p2 = players.length > 1 ? players[1] : undefined;
@@ -203,7 +205,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              transition={{ duration: 2 }}
-             className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none z-0"
+             className="absolute -bottom-25 left-1/2 -translate-x-1/2 w-200 h-150 pointer-events-none z-0"
              style={{ background: 'radial-gradient(ellipse at bottom, rgba(255,255,255,0.15) 0%, rgba(74,159,212,0.05) 50%, transparent 80%)' }}
            />
         )}
@@ -224,7 +226,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
           className="text-center mb-8"
         >
           {isMultiplayer ? (
-            <div className="min-h-[140px]">
+            <div className="min-h-35">
               <h2 className="text-sm md:text-base font-mono text-white/50 uppercase tracking-[0.3em] font-bold mb-3">
                 Final Standings
               </h2>
@@ -260,7 +262,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
         {isMultiplayer ? (
           <div className="w-full flex flex-col items-center">
             {/* Podium */}
-            <div className="flex items-end justify-center mb-12 h-[400px] md:h-[450px]">
+            <div className="flex items-end justify-center mb-12 h-100 md:h-112.5">
               <PodiumBar player={p2} position={2} finalHeight="45%" delay={2.0} isWinner={false} />
               <PodiumBar player={p1} position={1} finalHeight="75%" delay={3.6} isWinner={true} />
               <PodiumBar player={p3} position={3} finalHeight="30%" delay={0.6} isWinner={false} />
@@ -312,7 +314,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
               </p>
               <div className="inline-block relative">
                 <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full" />
-                <h3 className="relative text-7xl md:text-8xl font-black text-white tracking-tighter drop-shadow-lg text-glow animate-[score-reveal_1s_ease-out_forwards]">
+                <h3 className="relative text-7xl md:text-8xl font-black text-white tracking-tighter drop-shadow-lg text-glow animate-score-reveal">
                   {me?.score?.toLocaleString() || 0}
                 </h3>
               </div>

@@ -69,7 +69,7 @@ export default function App() {
               }}
             />
           ) : (
-            <GameBoard ws={ws} gameId={gameId} playerId={playerId} mode={mode!} />
+            <GameBoard ws={ws} playerId={playerId} mode={mode!} />
           )
         }
       />
