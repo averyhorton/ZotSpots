@@ -46,6 +46,12 @@ interface ScoreHeaderProps {
   right: PlayerInfo;
   singleplayer?: boolean;
   pulsing?: boolean;
+  roundResults?: ResultsMsg | null;
+}
+
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)}m away`;
+  return `${(meters / 1000).toFixed(2)}km away`;
 }
 
 function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yellow" }) {
@@ -56,7 +62,7 @@ function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yell
   );
 }
 
-function ScoreHeader({ left, right, singleplayer = false, pulsing }: ScoreHeaderProps) {
+function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults }: ScoreHeaderProps) {
   if (singleplayer) {
     return (
       <header className={`w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto ${pulsing ? "yellow-pulse-once" : ""}`}>
@@ -66,6 +72,17 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing }: ScoreHeader
             <div className="flex flex-col">
               <span className="font-mono text-xs text-muted truncate">{left.name}</span>
               <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+              {roundResults && (
+                <span className={`font-mono text-xs ${
+                  roundResults.results.players[left.id]?.distance != null
+                    ? "text-green-400"
+                    : "text-red-500"
+                }`}>
+                  {roundResults.results.players[left.id]?.distance != null
+                    ? formatDistance(roundResults.results.players[left.id].distance!)
+                    : "Didn't Guess!"}
+                </span>
+              )}
             </div>
           </div>
           <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
@@ -83,6 +100,17 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing }: ScoreHeader
           <div className="flex flex-col">
             <span className="font-mono text-xs text-muted truncate">{left.name}</span>
             <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+            {roundResults && (
+              <span className={`font-mono text-xs ${
+                roundResults.results.players[left.id]?.distance != null
+                  ? "text-green-400"
+                  : "text-red-500"
+              }`}>
+                {roundResults.results.players[left.id]?.distance != null
+                  ? formatDistance(roundResults.results.players[left.id].distance!)
+                  : "Didn't Guess!"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -94,6 +122,17 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing }: ScoreHeader
           <div className="flex flex-col items-end">
             <span className="font-mono text-xs text-muted truncate">{right.name}</span>
             <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
+            {roundResults && (
+              <span className={`font-mono text-xs ${
+                roundResults.results.players[right.id]?.distance != null
+                  ? "text-green-400"
+                  : "text-red-500"
+              }`}>
+                {roundResults.results.players[right.id]?.distance != null
+                  ? formatDistance(roundResults.results.players[right.id].distance!)
+                  : "Didn't Guess!"}
+              </span>
+            )}
           </div>
           <Emblem name={right.name} color="yellow"/>
         </div>
@@ -248,7 +287,7 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false }: Resul
       />
       {/* Score header overlaid on top */}
       <div className="fixed top-0 left-0 w-full" style={{ zIndex: 1001 }}>
-        <ScoreHeader left={left} right={right} singleplayer={singleplayer} />
+        <ScoreHeader left={left} right={right} singleplayer={singleplayer} roundResults={roundResults} />
       </div>
     </div>
   );

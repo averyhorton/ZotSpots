@@ -174,9 +174,8 @@ class GameEngine:
                 game.actual_location["lng"]
             )
 
-            penalty = self._score_from_distance(distance)
 
-            game.players[player_id]["score"] -= penalty
+            game.players[player_id]["score"] -= int(distance)
 
             results["players"][player_id] = {
                 "guess": guess,
@@ -202,13 +201,6 @@ class GameEngine:
 
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return R * c
-
-    def _score_from_distance(self, distance: float) -> int:
-        scaled = distance / MAX_CAMPUS_DISTANCE # scale distance down for more accurate points deductions
-        scaled = min(scaled, 1)
-
-        penalty = int(MAX_POINTS * (scaled**3))
-        return penalty # to be subtracted from their score
 
     def encode(self, length=6) -> str:
         # Creates a joinable code for a game
