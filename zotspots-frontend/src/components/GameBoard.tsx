@@ -95,27 +95,38 @@ function ScoreHeader({
     return (
       <header className={`w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto ${pulsing ? "yellow-pulse-once" : ""}`}>
         <div className="flex items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <Emblem name={left.name} />
-            <div className="flex flex-col">
-              <span className="font-mono text-xs text-muted truncate">{left.name}</span>
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+        <div className="flex items-center gap-2 w-36">
+          <Emblem name={left.name} color="blue" />
+
+          <div className="flex flex-col items-start">
+            <span className="font-mono text-xs text-muted truncate">
+              {left.name}
+            </span>
+
+            <div className="flex flex-col items-start relative">
+              <span className="font-mono text-lg font-bold leading-tight text-center">
+                {left.score}
+              </span>
+              <div className="absolute -right-5 top-1/2 -translate-y-1/2">
                 <Checkmark guessed={leftGuessed} pulsing={leftPulsing} />
               </div>
-              {roundResults && (
-                <span className={`font-mono text-xs ${
+            </div>
+
+            {roundResults && (
+              <span
+                className={`font-mono text-xs ${
                   roundResults.results.players[left.id]?.distance != null
                     ? "text-green-400"
                     : "text-red-500"
-                }`}>
-                  {roundResults.results.players[left.id]?.distance != null
-                    ? formatDistance(roundResults.results.players[left.id].distance!)
-                    : "Didn't Guess!"}
-                </span>
-              )}
-            </div>
+                }`}
+              >
+                {roundResults.results.players[left.id]?.distance != null
+                  ? formatDistance(roundResults.results.players[left.id].distance!)
+                  : "Didn't Guess!"}
+              </span>
+            )}
           </div>
+        </div>
           <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
         </div>
       </header>
@@ -127,19 +138,28 @@ function ScoreHeader({
       <div className="flex items-center justify-between px-6">
         {/* Left player (current player) */}
         <div className="flex items-center gap-2 w-36">
-          <Emblem name={left.name} color="blue" />
-          <div className="flex flex-col">
-            <span className="font-mono text-xs text-muted truncate">{left.name}</span>
-            <div className="flex items-center gap-1">
-              <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+        <Emblem name={left.name} color="blue" />
+        <div className="flex flex-col items-start">
+          <span className="font-mono text-xs text-muted truncate">
+            {left.name}
+          </span>
+          <div className="flex flex-col items-start relative">
+            <span className="font-mono text-lg font-bold leading-tight text-center">
+              {left.score}
+            </span>
+            <div className="absolute -right-5 top-1/2 -translate-y-1/2">
               <Checkmark guessed={leftGuessed} pulsing={leftPulsing} />
             </div>
+          </div>
+          <div>
             {roundResults && (
-              <span className={`font-mono text-xs ${
-                roundResults.results.players[left.id]?.distance != null
-                  ? "text-green-400"
-                  : "text-red-500"
-              }`}>
+              <span
+                className={`font-mono text-xs ${
+                  roundResults.results.players[left.id]?.distance != null
+                    ? "text-green-400"
+                    : "text-red-500"
+                }`}
+              >
                 {roundResults.results.players[left.id]?.distance != null
                   ? formatDistance(roundResults.results.players[left.id].distance!)
                   : "Didn't Guess!"}
@@ -147,29 +167,36 @@ function ScoreHeader({
             )}
           </div>
         </div>
+      </div>
 
         {/* Logo divider */}
         <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
 
         {/* Right player (opponent) */}
-        <div className="flex items-center gap-2 w-36 justify-end">
+        <div className="flex items-center gap-2 w-36">
           <div className="flex flex-col items-end">
             <span className="font-mono text-xs text-muted truncate">{right.name}</span>
-            <div className="flex items-center gap-1">
-              <Checkmark guessed={rightGuessed} pulsing={rightPulsing} />
-              <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
-            </div>
-            {roundResults && (
-              <span className={`font-mono text-xs ${
-                roundResults.results.players[right.id]?.distance != null
-                  ? "text-green-400"
-                  : "text-red-500"
-              }`}>
-                {roundResults.results.players[right.id]?.distance != null
-                  ? formatDistance(roundResults.results.players[right.id].distance!)
-                  : "Didn't Guess!"}
+            <div className="flex flex-col items-end relative">
+              <span className="font-mono text-lg font-bold leading-tight text-center">
+                {right.score}
               </span>
-            )}
+              <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+                <Checkmark guessed={rightGuessed} pulsing={rightPulsing} />
+              </div>
+            </div>
+            <div>
+              {roundResults && (
+                <span className={`font-mono text-xs ${
+                  roundResults.results.players[right.id]?.distance != null
+                    ? "text-green-400"
+                    : "text-red-500"
+                }`}>
+                  {roundResults.results.players[right.id]?.distance != null
+                    ? formatDistance(roundResults.results.players[right.id].distance!)
+                    : "Didn't Guess!"}
+                </span>
+              )}
+            </div>
           </div>
           <Emblem name={right.name} color="yellow" />
         </div>
