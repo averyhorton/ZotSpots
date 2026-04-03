@@ -47,6 +47,10 @@ interface ScoreHeaderProps {
   singleplayer?: boolean;
   pulsing?: boolean;
   roundResults?: ResultsMsg | null;
+  leftGuessed?: boolean;
+  rightGuessed?: boolean;
+  leftPulsing?: boolean;
+  rightPulsing?: boolean;
 }
 
 function formatDistance(meters: number): string {
@@ -62,7 +66,31 @@ function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yell
   );
 }
 
-function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults }: ScoreHeaderProps) {
+function Checkmark({ guessed, pulsing }: { guessed: boolean; pulsing: boolean }) {
+  return (
+    <span className={`text-lg leading-none transition-colors ${
+      !guessed
+        ? "text-gray-400"
+        : pulsing
+        ? "text-green-400 check-pulse"
+        : "text-green-400 check-glow"
+    }`}>
+      ✓
+    </span>
+  );
+}
+
+function ScoreHeader({
+  left,
+  right,
+  singleplayer = false,
+  pulsing,
+  roundResults,
+  leftGuessed = false,
+  rightGuessed = false,
+  leftPulsing = false,
+  rightPulsing = false,
+}: ScoreHeaderProps) {
   if (singleplayer) {
     return (
       <header className={`w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto ${pulsing ? "yellow-pulse-once" : ""}`}>
@@ -71,7 +99,10 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults 
             <Emblem name={left.name} />
             <div className="flex flex-col">
               <span className="font-mono text-xs text-muted truncate">{left.name}</span>
-              <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+                <Checkmark guessed={leftGuessed} pulsing={leftPulsing} />
+              </div>
               {roundResults && (
                 <span className={`font-mono text-xs ${
                   roundResults.results.players[left.id]?.distance != null
@@ -96,10 +127,13 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults 
       <div className="flex items-center justify-between px-6">
         {/* Left player (current player) */}
         <div className="flex items-center gap-2 w-36">
-          <Emblem name={left.name} color="blue"/>
+          <Emblem name={left.name} color="blue" />
           <div className="flex flex-col">
             <span className="font-mono text-xs text-muted truncate">{left.name}</span>
-            <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+            <div className="flex items-center gap-1">
+              <span className="font-mono text-lg font-bold leading-tight">{left.score}</span>
+              <Checkmark guessed={leftGuessed} pulsing={leftPulsing} />
+            </div>
             {roundResults && (
               <span className={`font-mono text-xs ${
                 roundResults.results.players[left.id]?.distance != null
@@ -121,7 +155,10 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults 
         <div className="flex items-center gap-2 w-36 justify-end">
           <div className="flex flex-col items-end">
             <span className="font-mono text-xs text-muted truncate">{right.name}</span>
-            <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
+            <div className="flex items-center gap-1">
+              <Checkmark guessed={rightGuessed} pulsing={rightPulsing} />
+              <span className="font-mono text-lg font-bold leading-tight">{right.score}</span>
+            </div>
             {roundResults && (
               <span className={`font-mono text-xs ${
                 roundResults.results.players[right.id]?.distance != null
@@ -134,7 +171,7 @@ function ScoreHeader({ left, right, singleplayer = false, pulsing, roundResults 
               </span>
             )}
           </div>
-          <Emblem name={right.name} color="yellow"/>
+          <Emblem name={right.name} color="yellow" />
         </div>
       </div>
     </header>
@@ -161,6 +198,10 @@ interface PlayingPanelProps {
   singleplayer?: boolean;
   onDisconnect: () => void;
   pulsing: boolean;
+  leftGuessed: boolean;
+  rightGuessed: boolean;
+  leftPulsing: boolean;
+  rightPulsing: boolean;
 }
 
 interface ResultsPanelProps {
@@ -175,10 +216,10 @@ interface GameOverPanelProps {
   singleplayer?: boolean;
 }
 
-function WaitingPanel({ left, right, singleplayer = false}: WaitingPanelProps) {
+function WaitingPanel({ left, right, singleplayer = false }: WaitingPanelProps) {
   return (
     <div>
-      <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
+      <ScoreHeader left={left} right={right} singleplayer={singleplayer} />
       <div className="text-center">
         <p className="font-mono text-muted">Waiting for game to start…</p>
       </div>
@@ -198,7 +239,11 @@ function PlayingPanel({
   right,
   singleplayer,
   onDisconnect,
-  pulsing
+  pulsing,
+  leftGuessed,
+  rightGuessed,
+  leftPulsing,
+  rightPulsing,
 }: PlayingPanelProps) {
   const viewerRef = useRef<any>(null);
 
@@ -234,7 +279,16 @@ function PlayingPanel({
       </div>
       {/* UI Overlay */}
       <div className="relative z-10 pointer-events-none">
-        <ScoreHeader left={left} right={right} singleplayer={singleplayer} pulsing={pulsing}/>
+        <ScoreHeader
+          left={left}
+          right={right}
+          singleplayer={singleplayer}
+          pulsing={pulsing}
+          leftGuessed={leftGuessed}
+          rightGuessed={rightGuessed}
+          leftPulsing={leftPulsing}
+          rightPulsing={rightPulsing}
+        />
         <div className="fixed top-20 left-2 z-50 pointer-events-none">
           <p
             className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
@@ -252,7 +306,6 @@ function PlayingPanel({
             ✕
           </button>
         </div>
-        
       </div>
       <div className="pointer-events-auto">
         <GuessMap guess={guess} onGuess={onGuess} />
@@ -277,7 +330,6 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false }: Resul
 
   return (
     <div className="relative w-screen h-screen">
-      {/* Fullscreen map */}
       <ResultsMap
         actualLocation={roundResults.results.actual_location}
         results={roundResults.results.players}
@@ -285,7 +337,6 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false }: Resul
         right={right}
         singleplayer={singleplayer}
       />
-      {/* Score header overlaid on top */}
       <div className="fixed top-0 left-0 w-full" style={{ zIndex: 1001 }}>
         <ScoreHeader left={left} right={right} singleplayer={singleplayer} roundResults={roundResults} />
       </div>
@@ -330,15 +381,16 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [scores, setScores] = useState<Record<string, number>>({});
   const [pulsing, setPulsing] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [opponentHasGuessed, setOpponentHasGuessed] = useState(false);
+  const [opponentGuessPulse, setOpponentGuessPulse] = useState(false);
   const panoRef = useRef<HTMLDivElement | null>(null);
 
-  // Ref so handleMessage always sees current phase without stale closure
   const phaseRef = useRef<GamePhase>("waiting");
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
 
-  // Countdown timer — lives here so it doesn't affect PlayingPanel's identity
+  // Countdown timer
   useEffect(() => {
     if (phase !== "playing") return;
 
@@ -363,29 +415,32 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
         const data = msg as WSMessage & RoundStartMsg;
         setCurrentRound({ round: data.round, image: data.image, players: data.players });
         setPlayers(data.players);
-        // Seed scores at 5000 on the first round only
         setScores((prev) => {
           if (Object.keys(prev).length > 0) return prev;
           return Object.fromEntries(Object.keys(data.players).map((id) => [id, 5000]));
         });
         setGuess(null);
         setHasGuessed(false);
+        setOpponentHasGuessed(false);
+        setOpponentGuessPulse(false);
         setTimeLeft(30);
         setPhase("playing");
         break;
       }
-      case "guess_processed":
-        console.log("Received guess!")
+      case "guess_processed": {
         const data = msg as WSMessage & GuessProcessedMsg;
         if (data.playerId !== playerId) {
+          setOpponentHasGuessed(true);
+          setOpponentGuessPulse(true);
+          setTimeout(() => setOpponentGuessPulse(false), 600);
           setNotification(`${data.name} has guessed!`);
           setTimeout(() => setNotification(null), 3000);
         }
         break;
+      }
       case "results": {
         const data = msg as WSMessage & ResultsMsg;
         setRoundResults({ round: data.round, results: data.results });
-        // Update scores from results payload
         setScores((prev) => {
           const next = { ...prev };
           for (const [id, result] of Object.entries(data.results.players)) {
@@ -435,17 +490,16 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     setTimeout(() => setPulsing(false), 600);
   }
 
-  // Derive left (self) and right (opponent) for the score header
   const opponentId = Object.keys(players).find((id) => id !== playerId) ?? "";
   const left: PlayerInfo = {
     id: playerId,
     name: players[playerId]?.name ?? "You",
-    score: scores[playerId] ?? 5000,
+    score: scores[playerId] ?? 0,
   };
   const right: PlayerInfo = {
     id: opponentId,
     name: players[opponentId]?.name ?? "Opponent",
-    score: scores[opponentId] ?? 5000,
+    score: scores[opponentId] ?? 0,
   };
 
   return (
@@ -457,7 +511,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       {notification && (
-        <div className="fixed top-20 left-1/2  z-50
+        <div className="fixed top-20 left-1/2 z-50
           bg-black/70 text-white font-mono text-sm px-5 py-2 rounded-full
           shadow-lg animate-fade-in-down">
           🎯 {notification}
@@ -465,14 +519,14 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       <div>
-        {phase === "waiting" && <WaitingPanel 
-          left={left} 
-          right={right} 
-          singleplayer={singleplayer}
-          onDisconnect={() => {
-            window.location.href = "/play";
-          }}
-        />}
+        {phase === "waiting" && (
+          <WaitingPanel
+            left={left}
+            right={right}
+            singleplayer={singleplayer}
+            onDisconnect={() => { window.location.href = "/play"; }}
+          />
+        )}
         {phase === "playing" && (
           <PlayingPanel
             currentRound={currentRound}
@@ -485,14 +539,20 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             left={left}
             right={right}
             singleplayer={singleplayer}
-            onDisconnect={() => {
-              window.location.href = "/play";
-            }}
+            onDisconnect={() => { window.location.href = "/play"; }}
             pulsing={pulsing}
+            leftGuessed={hasGuessed}
+            rightGuessed={opponentHasGuessed}
+            leftPulsing={pulsing}
+            rightPulsing={opponentGuessPulse}
           />
         )}
-        {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer}/>}
-        {phase === "game_over" && <GameOverPanel finalScores={finalScores} singleplayer={singleplayer}/>}
+        {phase === "results" && (
+          <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer} />
+        )}
+        {phase === "game_over" && (
+          <GameOverPanel finalScores={finalScores} singleplayer={singleplayer} />
+        )}
       </div>
     </div>
   );
