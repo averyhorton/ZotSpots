@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { WSMessage } from "../hooks/useWebSocket";
+import GuessMap from "./GuessMap";
 
 interface PlayerResult {
   guess: { lat: number; lng: number } | null;
@@ -105,6 +106,7 @@ interface PlayingPanelProps {
   currentRound: RoundStartMsg | null;
   timeLeft: number;
   guess: { lat: number; lng: number } | null;
+  onGuess: (latlng: { lat: number; lng: number }) => void;
   hasGuessed: boolean;
   submitGuess: () => void;
   panoRef: React.RefObject<HTMLDivElement | null>;
@@ -142,6 +144,7 @@ function PlayingPanel({
   timeLeft,
   guess,
   hasGuessed,
+  onGuess,
   submitGuess,
   panoRef,
   left,
@@ -199,6 +202,21 @@ function PlayingPanel({
             className="w-9 h-9 p-5 flex items-center justify-center rounded-lg bg-black/60 text-red-500 hover:bg-red-600 hover:text-white transition-colors font-bold text-2xl"
           >
             ✕
+          </button>
+        </div>
+        
+      </div>
+      <div className="pointer-events-auto">
+        <GuessMap guess={guess} onGuess={onGuess} />
+        <div className="fixed bottom-1 right-3 z-50" style={{ width: 400 }}>
+          <button
+            onClick={submitGuess}
+            disabled={!guess || hasGuessed}
+            className="w-full mt-2 py-7 font-mono font-bold text-sm rounded-lg transition-colors
+              bg-blue-500 text-white hover:bg-blue-600
+              disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+          >
+            {hasGuessed ? "Guess submitted!" : "Submit Guess 📍"}
           </button>
         </div>
       </div>
@@ -379,6 +397,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             timeLeft={timeLeft}
             guess={guess}
             hasGuessed={hasGuessed}
+            onGuess={setGuess}
             submitGuess={submitGuess}
             panoRef={panoRef}
             left={left}
