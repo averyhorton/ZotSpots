@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { WSMessage } from "../hooks/useWebSocket";
 import GuessMap from "./GuessMap";
 import ResultsMap from "./ResultsMap";
+import GameOver from "./GameOver";
 
 interface PlayerResult {
   guess: { lat: number; lng: number } | null;
@@ -28,7 +29,7 @@ interface ResultsMsg {
   };
 }
 
-interface GameOverMsg {
+export interface GameOverMsg {
   winner: { id: string; score: number } | null;
   final_scores: Record<string, { name: string; score: number }>;
 }
@@ -372,20 +373,7 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false }: Resul
 }
 
 function GameOverPanel({ finalScores, singleplayer = false }: GameOverPanelProps) {
-  return (
-    <div className="text-center">
-      {/* TODO: leaderboard, winner banner for multiplayer */}
-      <h2 className="font-mono text-2xl font-bold mb-2">Game Over</h2>
-      {finalScores?.winner && (
-        <p className="font-mono text-lg mb-4">
-          Winner:{" "}
-          {finalScores.final_scores[finalScores.winner.id]?.name ?? finalScores.winner.id}
-          {" "}({finalScores.winner.score} pts)
-        </p>
-      )}
-      <pre className="text-xs text-left">{JSON.stringify(finalScores?.final_scores, null, 2)}</pre>
-    </div>
-  );
+  return <GameOver finalScores={finalScores} singleplayer={singleplayer} />;
 }
 
 interface GameBoardProps {
