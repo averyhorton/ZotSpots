@@ -39,6 +39,7 @@ interface ScoreHeaderProps {
   left: PlayerInfo;
   right: PlayerInfo;
   singleplayer?: boolean;
+  pulsing?: boolean;
 }
 
 function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yellow" }) {
@@ -49,10 +50,10 @@ function Emblem({ name, color = "blue" }: { name: string; color?: "blue" | "yell
   );
 }
 
-function ScoreHeader({ left, right, singleplayer = false }: ScoreHeaderProps) {
+function ScoreHeader({ left, right, singleplayer = false, pulsing }: ScoreHeaderProps) {
   if (singleplayer) {
     return (
-      <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto">
+      <header className={`w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto ${pulsing ? "yellow-pulse-once" : ""}`}>
         <div className="flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
             <Emblem name={left.name} />
@@ -68,7 +69,7 @@ function ScoreHeader({ left, right, singleplayer = false }: ScoreHeaderProps) {
   }
 
   return (
-    <header className="w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto">
+    <header className={`w-full bg-card shadow-sm py-3 fixed top-0 left-0 z-50 pointer-events-auto ${pulsing ? "yellow-pulse-once" : ""}`}>
       <div className="flex items-center justify-between px-6">
         {/* Left player (current player) */}
         <div className="flex items-center gap-2 w-36">
@@ -114,6 +115,7 @@ interface PlayingPanelProps {
   right: PlayerInfo;
   singleplayer?: boolean;
   onDisconnect: () => void;
+  pulsing: boolean;
 }
 
 interface ResultsPanelProps {
@@ -150,7 +152,8 @@ function PlayingPanel({
   left,
   right,
   singleplayer,
-  onDisconnect
+  onDisconnect,
+  pulsing
 }: PlayingPanelProps) {
   const viewerRef = useRef<any>(null);
 
@@ -186,7 +189,7 @@ function PlayingPanel({
       </div>
       {/* UI Overlay */}
       <div className="relative z-10 pointer-events-none">
-        <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
+        <ScoreHeader left={left} right={right} singleplayer={singleplayer} pulsing={pulsing}/>
         <div className="fixed top-20 left-2 z-50 pointer-events-none">
           <p
             className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
@@ -212,8 +215,8 @@ function PlayingPanel({
           <button
             onClick={submitGuess}
             disabled={!guess || hasGuessed}
-            className="w-full mt-2 py-7 font-mono font-bold text-sm rounded-lg transition-colors
-              bg-blue-500 text-white hover:bg-blue-600
+            className="fixed bottom-1 right-3 z-50 w-64 py-5 sm:w-80 md:w-96 font-black text-3xl rounded-lg transition-colors
+              bg-blue-500 text-white hover:bg-blue-600 hover:text-glow
               disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             {hasGuessed ? "Guess submitted!" : "Submit Guess 📍"}
@@ -270,6 +273,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
   const [error, setError] = useState<string | null>(null);
   const [players, setPlayers] = useState<Record<string, { name: string }>>({});
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [pulsing, setPulsing] = useState(false);
   const panoRef = useRef<HTMLDivElement | null>(null);
 
   // Ref so handleMessage always sees current phase without stale closure
@@ -325,7 +329,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
           }
           return next;
         });
-        setPhase("results");
+        setTimeout(() => setPhase("results"), 250);
         break;
       }
       case "game_over": {
@@ -360,6 +364,12 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
     sendMessage({ type: "guess", lat: guess.lat, lng: guess.lng });
     setHasGuessed(true);
   }, [guess, hasGuessed, sendMessage]);
+
+  function handleSubmit() {
+    setPulsing(true);
+    submitGuess();
+    setTimeout(() => setPulsing(false), 600);
+  }
 
   // Derive left (self) and right (opponent) for the score header
   const opponentId = Object.keys(players).find((id) => id !== playerId) ?? "";
@@ -398,7 +408,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             guess={guess}
             hasGuessed={hasGuessed}
             onGuess={setGuess}
-            submitGuess={submitGuess}
+            submitGuess={handleSubmit}
             panoRef={panoRef}
             left={left}
             right={right}
@@ -406,6 +416,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
             onDisconnect={() => {
               window.location.href = "/play";
             }}
+            pulsing={pulsing}
           />
         )}
         {phase === "results" && <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer}/>}

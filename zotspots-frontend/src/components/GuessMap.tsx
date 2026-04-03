@@ -93,10 +93,8 @@ export default function GuessMap({ guess, onGuess }: GuessMapProps) {
   }, [guess]);
 
   return (
-    <div className="fixed bottom-21 right-3 z-50 rounded-xl overflow-hidden shadow-2xl border border-white/20"
-      style={{ width: 400, height: 300 }}
-    >
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
-    </div>
+    <div className="fixed bottom-20 right-3 z-50 rounded-xl overflow-hidden shadow-2xl border border-white/20 w-64 h-44 sm:w-80 sm:h-56 md:w-96 md:h-64">
+    <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+  </div>
   );
 }
