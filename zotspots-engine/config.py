@@ -11,7 +11,7 @@ MAX_POINTS = 5000 # beginning score
 
 NUM_ROUNDS = 5 # Default Game lasts 5 rounds
 ROUND_DURATION = 30 # each round lasts 30 seconds
-INTER_ROUND_DELAY = 5 # display updated scores for 5 seconds between rounds
+INTER_ROUND_DELAY = 10 # display updated scores for 5 seconds between rounds
 TABLE = "Locations"
 
 # 1. Load database credentials and boot up client

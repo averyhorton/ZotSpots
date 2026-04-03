@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { WSMessage } from "../hooks/useWebSocket";
 import GuessMap from "./GuessMap";
+import ResultsMap from "./ResultsMap";
 
 interface PlayerResult {
   guess: { lat: number; lng: number } | null;
@@ -232,13 +233,23 @@ function PlayingPanel({
   );
 }
 
-function ResultsPanel({ roundResults, left, right, singleplayer = false}: ResultsPanelProps) {
+function ResultsPanel({ roundResults, left, right, singleplayer = false }: ResultsPanelProps) {
+  if (!roundResults) return null;
+
   return (
-    <div>
-      <ScoreHeader left={left} right={right} singleplayer={singleplayer}/>
-      {/* TODO: show map with actual location + all player guesses + distances */}
-      <h2 className="font-mono text-xl font-bold mb-2">Round {roundResults?.round} Results</h2>
-      <pre className="text-xs text-left">{JSON.stringify(roundResults?.results, null, 2)}</pre>
+    <div className="relative w-screen h-screen">
+      {/* Fullscreen map */}
+      <ResultsMap
+        actualLocation={roundResults.results.actual_location}
+        results={roundResults.results.players}
+        left={left}
+        right={right}
+        singleplayer={singleplayer}
+      />
+      {/* Score header overlaid on top */}
+      <div className="fixed top-0 left-0 w-full" style={{ zIndex: 1001 }}>
+        <ScoreHeader left={left} right={right} singleplayer={singleplayer} />
+      </div>
     </div>
   );
 }
@@ -343,7 +354,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
           }
           return next;
         });
-        setTimeout(() => setPhase("results"), 250);
+        setTimeout(() => setPhase("results"), 500);
         break;
       }
       case "game_over": {
@@ -407,7 +418,7 @@ export default function GameBoard({ ws, gameId, playerId, mode }: GameBoardProps
       )}
 
       {notification && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50
+        <div className="fixed top-20 left-1/2  z-50
           bg-black/70 text-white font-mono text-sm px-5 py-2 rounded-full
           shadow-lg animate-fade-in-down">
           🎯 {notification}
