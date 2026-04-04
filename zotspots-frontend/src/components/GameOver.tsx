@@ -85,12 +85,23 @@ const ConfettiParticles = ({ trigger }: { trigger: boolean }) => {
 
 interface PlayerData { id: string; name: string; score: number; }
 
-const PodiumBar = ({ player, position, finalHeight, delay, isWinner }: { player?: PlayerData, position: number, finalHeight: string, delay: number, isWinner: boolean }) => {
-  if (!player) return <div className="w-24 md:w-32 mx-2 opacity-0" />;
-
+const PodiumBar = ({ player, position, finalHeight, delay, isWinner, isTied = false }: {
+  player?: PlayerData, 
+  position: number, 
+  finalHeight: string,
+  delay: number, 
+  isWinner: boolean, 
+  isTied?: boolean
+}) => {
   const medalColor = position === 1 ? "#FFD200" : position === 2 ? "#C0C0C0" : "#CD7F32";
-  const bgClass = isWinner ? "bg-linear-to-t from-primary-dark via-primary to-accent border-t-2 border-accent/50 shadow-[0_-10px_40px_rgba(255,210,0,0.4)]" : "bg-linear-to-t from-black/80 via-black/60 to-white/10 border-t border-white/20";
-  const numberClass = isWinner ? "text-black/30" : "text-white/20";
+  const bgClass = isWinner
+    ? "bg-linear-to-t from-primary-dark via-primary to-accent border-t-2 border-accent/50 shadow-[0_-10px_40px_rgba(255,210,0,0.4)]"
+    : isTied
+    ? "bg-linear-to-t from-primary-dark via-primary to-blue-400 border-t-2 border-blue-400/50 shadow-[0_-10px_40px_rgba(100,160,255,0.4)]"
+    : "bg-linear-to-t from-black/80 via-black/60 to-white/10 border-t border-white/20";
+  const numberClass = isWinner || isTied ? "text-black/30" : "text-white/20";
+
+  if (!player) return <div className="w-24 md:w-32 mx-2 opacity-0" />;
   
   return (
     <div className="flex flex-col items-center justify-end mx-1 md:mx-3 relative z-10 w-24 md:w-36 h-full">
@@ -102,15 +113,15 @@ const PodiumBar = ({ player, position, finalHeight, delay, isWinner }: { player?
           transition={{ delay: delay + 0.6, duration: 0.5 }}
           className="flex flex-col items-center"
         >
-          {isWinner && (
-             <motion.div 
-               initial={{ scale: 0, opacity: 0 }}
-               animate={{ scale: 1, opacity: 1, filter: "drop-shadow(0 0 15px rgba(255,210,0,0.8))" }}
-               transition={{ delay: delay + 1.2, type: "spring" }}
-               className="text-accent mb-2"
-             >
-               <TrophyIcon />
-             </motion.div>
+          {(isWinner || isTied) && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1, filter: isTied ? "drop-shadow(0 0 15px rgba(100,160,255,0.8))" : "drop-shadow(0 0 15px rgba(255,210,0,0.8))" }}
+              transition={{ delay: delay + 1.2, type: "spring" }}
+              className={isTied ? "text-blue-400 mb-2" : "text-accent mb-2"}
+            >
+              <TrophyIcon />
+            </motion.div>
           )}
           <div className="flex items-center gap-1.5 mb-1 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
             <MedalIcon color={medalColor} />
@@ -148,7 +159,8 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
   })).sort((a, b) => b.score - a.score);
 
   const me = players[0];
-  const winner = isMultiplayer ? players[0] : null;
+  const isDraw = isMultiplayer && players.length >= 2 && players[0].score === players[1].score;
+  const winner = isMultiplayer && !isDraw ? players[0] : null;
 
   useEffect(() => {
     if (isMultiplayer && players.length > 0) {
@@ -230,19 +242,23 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
               <h2 className="text-sm md:text-base font-mono text-white/50 uppercase tracking-[0.3em] font-bold mb-3">
                 Final Standings
               </h2>
-              {showConfetti && winner ? (
-                 <motion.h1 
-                   initial={{ opacity: 0, scale: 0.9 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-tight"
-                 >
-                   {winner.name} Wins!
-                 </motion.h1>
-              ) : (
-                 <h1 className="text-5xl md:text-7xl font-black text-transparent opacity-0 pointer-events-none" aria-hidden="true">
-                   {winner?.name || "Placeholder"} Wins!
-                 </h1>
-              )}
+              {showConfetti && (isDraw ? (
+                <motion.h1
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-tight"
+                >
+                  It&apos;s a Tie!
+                </motion.h1>
+              ) : winner ? (
+                <motion.h1
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-tight"
+                >
+                  {winner.name} Wins!
+                </motion.h1>
+              ) : null)}
             </div>
           ) : (
             <>
@@ -263,8 +279,8 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
           <div className="w-full flex flex-col items-center">
             {/* Podium */}
             <div className="flex items-end justify-center mb-12 h-100 md:h-112.5">
-              <PodiumBar player={p2} position={2} finalHeight="45%" delay={2.0} isWinner={false} />
-              <PodiumBar player={p1} position={1} finalHeight="75%" delay={3.6} isWinner={true} />
+            <PodiumBar player={p2} position={2} finalHeight={isDraw ? "75%" : "45%"} delay={isDraw ? 3.6 : 2.0} isWinner={false} isTied={isDraw} />
+            <PodiumBar player={p1} position={1} finalHeight="75%" delay={3.6} isWinner={!isDraw} isTied={isDraw} />
               <PodiumBar player={p3} position={3} finalHeight="30%" delay={0.6} isWinner={false} />
             </div>
 
