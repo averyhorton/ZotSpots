@@ -271,8 +271,6 @@ export default function LobbyScreen({ ws, wsStatus, playerId, onGameStart }: Lob
     setJoinError("");
   }
 
-  // ── Derived state ──────────────────────────────────────────────────────────
-
   const me = lobby?.players.find((p) => p.id === playerId);
   const maxPlayers = lobby?.isSingleplayer ? 1 : 2;
   const allNamed = lobby?.players.every((p) => p.name) ?? false;

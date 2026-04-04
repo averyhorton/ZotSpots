@@ -128,7 +128,7 @@ function ScoreHeader({
             )}
           </div>
         </div>
-          <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
+          <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-16 object-contain" />
         </div>
       </header>
     );
@@ -171,10 +171,10 @@ function ScoreHeader({
       </div>
 
         {/* Logo divider */}
-        <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-12 object-contain" />
+        <img src="/PetrGuessr.png" alt="PetrGuessr" className="h-16 object-contain" />
 
         {/* Right player (opponent) */}
-        <div className="flex items-center gap-2 w-36">
+        <div className="flex items-center justify-end gap-2 w-36">
           <div className="flex flex-col items-end">
             <span className="font-mono text-xs text-muted truncate">{right.name}</span>
             <div className="flex flex-col items-end relative">
@@ -317,16 +317,16 @@ function PlayingPanel({
           leftPulsing={leftPulsing}
           rightPulsing={rightPulsing}
         />
-        <div className="fixed top-20 left-2 z-50 pointer-events-none">
+        <div className="fixed top-24 left-2 z-50 pointer-events-none">
           <p
-            className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 text-white ${
-              timeLeft <= 5 ? "text-red-400" : ""
+            className={`font-mono text-2xl px-4 py-2 rounded-lg bg-black/60 ${
+              timeLeft <= 5 ? "text-red-400" : "text-white"
             }`}
           >
             ⏱️ {timeLeft}s
           </p>
         </div>
-        <div className="fixed top-20 right-2 z-50 pointer-events-auto">
+        <div className="fixed top-24 right-2 z-50 pointer-events-auto">
           <button
             onClick={onDisconnect}
             className="w-9 h-9 p-5 flex items-center justify-center rounded-lg bg-black/60 text-red-500 hover:bg-red-600 hover:text-white transition-colors font-bold text-2xl"
