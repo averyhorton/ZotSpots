@@ -149,6 +149,7 @@ export default function Home() {
             {/* FOOTER */}
             <footer className="bg-primary-dark text-white/50 py-8 text-center text-sm font-medium border-t border-primary/30">
                 <p>PetrGuessr 2026</p>
+                <p>v1.0.0 alpha</p>
             </footer>
         </div>
     );
