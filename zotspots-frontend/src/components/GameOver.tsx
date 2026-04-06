@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useNavigate } from "react-router-dom";
 import type { GameOverMsg } from "./GameBoard";
 
 const TrophyIcon = () => (
@@ -150,7 +149,6 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
   const isMultiplayer = !singleplayer;
   const [showConfetti, setShowConfetti] = useState(false);
   const [showRemaining, setShowRemaining] = useState(false);
-  const navigate = useNavigate();
   
   const players: PlayerData[] = Object.entries(finalScores?.final_scores || {}).map(([id, data]) => ({
     id,

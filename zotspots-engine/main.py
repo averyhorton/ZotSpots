@@ -13,7 +13,7 @@ engine = GameEngine()
 # Allow CORS for frontend connections
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: REPLACE ME WITH FIREBASE DOMAIN
+    allow_origins=["https://petrguessr-ucirvine.web.app"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
