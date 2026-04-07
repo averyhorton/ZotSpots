@@ -6,6 +6,7 @@ interface PlayerResult {
   guess: { lat: number; lng: number } | null;
   distance: number | null;
   score: number;
+  is_perfect?: boolean;
 }
 
 interface PlayerInfo {
@@ -154,15 +155,28 @@ export default function ResultsMap({
           `;
           markerEl.textContent = left.name.charAt(0).toUpperCase();
 
-          L.marker(from, {
-            icon: guessIcon("#3b82f6", "white", left.name.charAt(0).toUpperCase(), leftGreyscale),
-          }).addTo(map).bindTooltip(left.name, { permanent: false });
+          const isPerf = leftResult.is_perfect;
+
+          if (isPerf) {
+             L.marker(from, {
+              icon: L.divIcon({
+                className: "",
+                html: `<div class="perfect-ripple-ring" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-weight: bold; font-size: 14px; background: #FFD200; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 15px rgba(255,210,0,0.8); color: black;">${left.name.charAt(0).toUpperCase()}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+              })
+             }).addTo(map).bindTooltip(left.name + " (Perfect!)", { permanent: false });
+          } else {
+             L.marker(from, {
+              icon: guessIcon("#3b82f6", "white", left.name.charAt(0).toUpperCase(), leftGreyscale),
+             }).addTo(map).bindTooltip(left.name, { permanent: false });
+          }
 
           // Line appears after markers
           setTimeout(() => {
             L.polyline(
               [[from.lat, from.lng], [actual.lat, actual.lng]],
-              { color: leftGreyscale ? "#9ca3af" : "#3b82f6", weight: 2, dashArray: "6 6" }
+              { color: isPerf ? "#FFD200" : (leftGreyscale ? "#9ca3af" : "#3b82f6"), weight: 2, dashArray: "6 6" }
             ).addTo(map);
           }, 400);
         }
@@ -171,14 +185,27 @@ export default function ResultsMap({
         if (!singleplayer && rightResult?.guess) {
           const from = L.latLng(rightResult.guess.lat, rightResult.guess.lng);
 
-          L.marker(from, {
-            icon: guessIcon("#facc15", "black", right.name.charAt(0).toUpperCase(), rightGreyscale),
-          }).addTo(map).bindTooltip(right.name, { permanent: false });
+          const rightIsPerf = rightResult.is_perfect;
+
+          if (rightIsPerf) {
+             L.marker(from, {
+              icon: L.divIcon({
+                className: "",
+                html: `<div class="perfect-ripple-ring" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-weight: bold; font-size: 14px; background: #FFD200; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 15px rgba(255,210,0,0.8); color: black;">${right.name.charAt(0).toUpperCase()}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+              })
+             }).addTo(map).bindTooltip(right.name + " (Perfect!)", { permanent: false });
+          } else {
+             L.marker(from, {
+              icon: guessIcon("#facc15", "black", right.name.charAt(0).toUpperCase(), rightGreyscale),
+             }).addTo(map).bindTooltip(right.name, { permanent: false });
+          }
 
           setTimeout(() => {
             L.polyline(
               [[from.lat, from.lng], [actual.lat, actual.lng]],
-              { color: rightGreyscale ? "#9ca3af" : "#facc15", weight: 2, dashArray: "6 6" }
+              { color: rightIsPerf ? "#FFD200" : (rightGreyscale ? "#9ca3af" : "#facc15"), weight: 2, dashArray: "6 6" }
             ).addTo(map);
           }, 500);
         }

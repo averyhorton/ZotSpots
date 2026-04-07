@@ -187,3 +187,22 @@
   padding: 0;
   text-align: center;
 }
+
+@keyframes perfect-ripple {
+  0% { box-shadow: 0 0 0 0 rgba(255, 210, 0, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 210, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 210, 0, 0); }
+}
+
+@utility perfect-ripple-ring {
+  animation: perfect-ripple 1.5s infinite;
+}
+
+@utility perfect-banner {
+  animation: perfect-banner-in 0.5s ease-out forwards;
+}
+
+@keyframes perfect-banner-in {
+  0% { opacity: 0; transform: scale(0.8) translateY(-20px); filter: drop-shadow(0 0 0 rgba(255,210,0,0)); }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: drop-shadow(0 0 20px rgba(255,210,0,0.8)); }
+}

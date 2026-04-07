@@ -40,7 +40,7 @@ export interface GameOverPanelProps {
   singleplayer?: boolean;
 }
 
-const ConfettiParticles = ({ trigger }: { trigger: boolean }) => {
+export const ConfettiParticles = ({ trigger }: { trigger: boolean }) => {
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; color: string; delay: number; duration: number }[]>([]);
 
   useEffect(() => {
@@ -48,14 +48,14 @@ const ConfettiParticles = ({ trigger }: { trigger: boolean }) => {
     const prefs = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (prefs.matches) return;
 
-    const colors = ["#FFD200", "#0064A4", "#FFFFFF", "#4A9FD4"];
-    const newParticles = Array.from({ length: 50 }).map((_, i) => ({
+    const colors = ["#FFD200", "#0064A4", "#FFFFFF", "#4A9FD4", "#FF6B35", "#A8E6CF"];
+    const newParticles = Array.from({ length: 120 }).map((_, i) => ({
       id: i,
-      x: (Math.random() - 0.5) * 800,
-      y: (Math.random() - 0.5) * 600 - 300,
+      x: (Math.random() - 0.5) * window.innerWidth * 1.4,
+      y: -(Math.random() * window.innerHeight * 0.9 + 100),
       color: colors[Math.floor(Math.random() * colors.length)],
-      delay: Math.random() * 0.3,
-      duration: 1.5 + Math.random() * 2
+      delay: Math.random() * 0.5,
+      duration: 2 + Math.random() * 1.5
     }));
     setParticles(newParticles);
   }, [trigger]);
@@ -63,12 +63,14 @@ const ConfettiParticles = ({ trigger }: { trigger: boolean }) => {
   if (particles.length === 0 || !trigger) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 flex items-center justify-center">
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 flex items-end justify-center">
       {particles.map(p => (
         <div
           key={p.id}
           className="absolute w-2.5 h-2.5 rounded-sm"
           style={{
+            bottom: 0,
+            left: "50%",
             backgroundColor: p.color,
             '--startX': '0px',
             '--startY': '0px',

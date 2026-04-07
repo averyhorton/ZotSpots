@@ -4,7 +4,7 @@ import uuid
 import math
 from typing import Dict, Optional
 from game import Game
-from config import MAX_POINTS, BASIC_PENALTY, MAX_CAMPUS_DISTANCE, DEBUG
+from config import STARTING_SCORE, MAX_CAMPUS_DISTANCE, PERFECT_GUESS_THRESHOLD, DEBUG
 from sockets import manager
 import secrets
 import string
@@ -82,7 +82,7 @@ class GameEngine:
                 return True
 
             game.players[player_id] = {
-                "score": MAX_POINTS
+                "score": STARTING_SCORE
             }
 
             return True
@@ -153,15 +153,15 @@ class GameEngine:
         }
 
         for player_id in game.players:
-            # If a player didn't guess, penalize them
+            # If a player didn't guess, they receive 0 points
             if player_id not in game.guesses:
                 if DEBUG:
-                    print(f"DEBUG:  Player {player_id} did not guess, assessing penalty...")
-                game.players[player_id]["score"] -= BASIC_PENALTY
+                    print(f"DEBUG:  Player {player_id} did not guess, granting 0 points...")
                 results["players"][player_id] = {
                     "guess": None,
                     "distance": None,
-                    "score": game.players[player_id]["score"]
+                    "score": game.players[player_id]["score"],
+                    "is_perfect": False
                 }
                 continue
             
@@ -174,13 +174,15 @@ class GameEngine:
                 game.actual_location["lng"]
             )
 
-
-            game.players[player_id]["score"] -= int(distance)
+            is_perfect = distance <= PERFECT_GUESS_THRESHOLD
+            round_score = 1000 if is_perfect else max(0, int(1000 * (1 - (distance / MAX_CAMPUS_DISTANCE))))
+            game.players[player_id]["score"] += round_score
 
             results["players"][player_id] = {
                 "guess": guess,
                 "distance": distance,
-                "score": game.players[player_id]["score"]
+                "score": game.players[player_id]["score"],
+                "is_perfect": is_perfect
             }
 
         return results

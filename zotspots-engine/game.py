@@ -22,18 +22,10 @@ class Game:
         # Extract players
         (p1_id, p1_data), (p2_id, p2_data) = list(self.players.items())
 
-        # Both at or below 0 → who has more remaining score wins
-        if p1_data["score"] <= 0 and p2_data["score"] <= 0:
-            if p1_data["score"] == p2_data["score"]:
-                return None  # tie
-            return (p1_id, p1_data) if p1_data["score"] > p2_data["score"] else (p2_id, p2_data)
-        elif p1_data["score"] <= 0:
-            return (p2_id, p2_data)
-        elif p2_data["score"] <= 0:
-            return (p1_id, p1_data)
-
-        # Nobody has lost yet
-        return None
+        # Determine winner based on highest score
+        if p1_data["score"] == p2_data["score"]:
+            return None  # tie
+        return (p1_id, p1_data) if p1_data["score"] > p2_data["score"] else (p2_id, p2_data)
     
     def get_id(self) -> str:
         return self.id

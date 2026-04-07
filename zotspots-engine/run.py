@@ -100,10 +100,6 @@ async def run_game(engine: GameEngine, game_id: str):
                     "results": results
                 })
 
-            # Check if someone won
-            winner = game.check_win()
-            if winner != None: 
-                break
             await asyncio.sleep(INTER_ROUND_DELAY)
         except Exception as e:
             await manager.broadcast(game_id, {
@@ -112,6 +108,8 @@ async def run_game(engine: GameEngine, game_id: str):
                     "message": f"Exception thrown: {e}"
                 })
             break
+
+    winner = game.check_win()
 
     # Broadcast results to frontend
     await manager.broadcast(game_id, {

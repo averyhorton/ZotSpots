@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { WSMessage } from "../hooks/useWebSocket";
 import GuessMap from "./GuessMap";
 import ResultsMap from "./ResultsMap";
-import GameOver from "./GameOver";
+import GameOver, { ConfettiParticles } from "./GameOver";
+import { motion, AnimatePresence } from "motion/react";
 
 interface PlayerResult {
   guess: { lat: number; lng: number } | null;
   distance: number | null;
   score: number;
+  is_perfect?: boolean;
 }
 
 interface RoundStartMsg {
@@ -237,7 +239,41 @@ interface ResultsPanelProps {
   left: PlayerInfo;
   right: PlayerInfo;
   singleplayer?: boolean;
+  isPerfectGuess?: boolean;
 }
+
+const PerfectGuessBanner = ({ show }: { show: boolean }) => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!show) return;
+    setVisible(true);
+    const t = setTimeout(() => setVisible(false), 2200);
+    return () => clearTimeout(t);
+  }, [show]);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: -80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, transition: { type: "spring", stiffness: 400, damping: 28 } }}
+          exit={{ y: -80, opacity: 0, transition: { duration: 0.3 } }}
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none"
+        >
+          <div className="relative px-8 py-3 rounded-2xl overflow-hidden shadow-2xl">
+            {/* blurred gold bg only around the pill */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-md rounded-2xl border border-yellow-400/40" />
+            <div className="absolute inset-0 rounded-2xl" style={{ boxShadow: "0 0 40px 4px rgba(255,210,0,0.45)" }} />
+            <p className="relative font-black text-2xl md:text-3xl tracking-tight whitespace-nowrap" style={{ color: "#FFD200", textShadow: "0 0 20px rgba(255,210,0,0.9)" }}>
+              ⭐ Perfect Guess! &nbsp;<span className="text-white/80 font-bold text-xl">+1000 pts</span>
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 interface GameOverPanelProps {
   finalScores: GameOverMsg | null;
@@ -353,7 +389,7 @@ function PlayingPanel({
   );
 }
 
-function ResultsPanel({ roundResults, left, right, singleplayer = false }: ResultsPanelProps) {
+function ResultsPanel({ roundResults, left, right, singleplayer = false, isPerfectGuess }: ResultsPanelProps) {
   if (!roundResults) return null;
 
   return (
@@ -368,6 +404,13 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false }: Resul
       <div className="fixed top-0 left-0 w-full" style={{ zIndex: 1001 }}>
         <ScoreHeader left={left} right={right} singleplayer={singleplayer} roundResults={roundResults} />
       </div>
+      {/* Confetti: fixed so it layers over the map */}
+      {isPerfectGuess && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-[9998] flex items-center justify-center">
+          <ConfettiParticles trigger={!!isPerfectGuess} />
+        </div>
+      )}
+      <PerfectGuessBanner show={!!isPerfectGuess} />
     </div>
   );
 }
@@ -397,6 +440,7 @@ export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
   const [notification, setNotification] = useState<string | null>(null);
   const [opponentHasGuessed, setOpponentHasGuessed] = useState(false);
   const [opponentGuessPulse, setOpponentGuessPulse] = useState(false);
+  const [isPerfectGuess, setIsPerfectGuess] = useState(false);
   const panoRef = useRef<HTMLDivElement | null>(null);
   const resultsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -432,10 +476,11 @@ export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
         setPlayers(data.players);
         setScores((prev) => {
           if (Object.keys(prev).length > 0) return prev;
-          return Object.fromEntries(Object.keys(data.players).map((id) => [id, 5000]));
+          return Object.fromEntries(Object.keys(data.players).map((id) => [id, 0]));
         });
         setGuess(null);
         setHasGuessed(false);
+        setIsPerfectGuess(false); // Reset perfect flag
         setOpponentHasGuessed(false);
         setOpponentGuessPulse(false);
         setTimeLeft(30);
@@ -456,6 +501,9 @@ export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
       case "results": {
         const data = msg as WSMessage & ResultsMsg;
         setRoundResults({ round: data.round, results: data.results });
+        if (data.results.players[playerId]?.is_perfect) {
+          setIsPerfectGuess(true);
+        }
         setScores((prev) => {
           const next = { ...prev };
           for (const [id, result] of Object.entries(data.results.players)) {
@@ -569,7 +617,7 @@ export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
           />
         )}
         {phase === "results" && (
-          <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer} />
+          <ResultsPanel roundResults={roundResults} left={left} right={right} singleplayer={singleplayer} isPerfectGuess={isPerfectGuess} />
         )}
         {phase === "game_over" && (
           <GameOverPanel finalScores={finalScores} singleplayer={singleplayer} />
