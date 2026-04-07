@@ -186,9 +186,9 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
   const remainingPlayers = players.slice(3);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-primary-dark/95 backdrop-blur-xl overflow-hidden scrollbar-hide" style={{ overflowY: 'auto' }}>
+    <div className="fixed inset-0 z-50">
       {/* Background UI with Spotlight */}
-      <div className="fixed inset-0 min-h-screen z-0">
+      <div className="fixed inset-0 z-0 bg-primary-dark/95 backdrop-blur-xl pointer-events-none overflow-hidden">
         <picture aria-hidden="true">
             <source media="(min-width: 768px)" srcSet="/UCI%20Map%20Desktop%20Background.png" />
             <img
@@ -211,7 +211,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
            />
         )}
         
-        {/* Spotlight Effect overlaying the podium area, not sure if it's really working but maybe helps */}
+        {/* Spotlight Effect overlaying the podium area */}
         {isMultiplayer && (
            <motion.div 
              initial={{ opacity: 0 }}
@@ -221,15 +221,18 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
              style={{ background: 'radial-gradient(ellipse at bottom, rgba(255,255,255,0.15) 0%, rgba(74,159,212,0.05) 50%, transparent 80%)' }}
            />
         )}
+
+        {/* Floating Petr Pins */}
+        <img aria-hidden="true" src="/PetrGuessr%20Logo.png" alt="Petr Pin" className="hidden md:block absolute top-[15%] left-[5%] xl:left-[10%] w-20 opacity-30 animate-float z-0 pointer-events-none" style={{ animationDelay: '0s' }} />
+        <img aria-hidden="true" src="/PetrGuessr%20Logo.png" alt="Petr Pin" className="hidden md:block absolute bottom-[20%] right-[5%] xl:right-[10%] w-24 opacity-20 animate-float z-0 pointer-events-none" style={{ animationDelay: '1.5s' }} />
       </div>
 
       <ConfettiParticles trigger={showConfetti} />
       
-      {/* Floating Petr Pins */}
-      <img aria-hidden="true" src="/PetrGuessr%20Logo.png" alt="Petr Pin" className="hidden md:block fixed top-[15%] left-[10%] w-20 opacity-30 animate-float z-0 pointer-events-none" style={{ animationDelay: '0s' }} />
-      <img aria-hidden="true" src="/PetrGuessr%20Logo.png" alt="Petr Pin" className="hidden md:block fixed bottom-[20%] right-[15%] w-24 opacity-20 animate-float z-0 pointer-events-none" style={{ animationDelay: '1.5s' }} />
-
-      <div className="relative z-30 w-full max-w-4xl flex flex-col items-center min-h-full py-10 justify-center">
+      {/* Scrollable Main Content */}
+      <div className="absolute inset-0 z-10 overflow-y-auto scrollbar-hide w-full">
+        <div className="min-h-full w-full flex flex-col items-center justify-center p-4 md:p-8">
+          <div className="relative z-30 w-full max-w-4xl flex flex-col items-center py-10 justify-center">
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
@@ -266,7 +269,7 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
                 <img src="/PetrGuessr%20Logo.png" alt="Locate Icon" className="w-12 h-12 object-contain" />
               </div>
               <h2 className="text-sm md:text-base font-mono text-white/70 uppercase tracking-[0.2em] font-bold mb-2">
-                Singleplayer Match
+                Singleplayer Game
               </h2>
               <h1 className="text-5xl md:text-6xl font-black text-white drop-shadow-xl mb-4 tracking-tight text-glow">
                 Final Results
@@ -368,6 +371,8 @@ export default function GameOver({ finalScores, singleplayer = false }: GameOver
             </motion.div>
           )}
         </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );

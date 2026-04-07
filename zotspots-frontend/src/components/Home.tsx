@@ -46,13 +46,13 @@ export default function Home() {
                     <img
                         src="/PetrGuessr%20Logo.png"
                         alt="Petr Pin Desktop"
-                        className="hidden md:block absolute top-[25%] left-[20%] md:w-20 opacity-70 animate-float drop-shadow-2xl z-0"
+                        className="hidden md:block absolute top-[25%] left-[5%] lg:left-[10%] xl:left-[15%] md:w-20 opacity-70 animate-float drop-shadow-2xl z-0"
                     />
                     <img
                         src="/PetrGuessr%20Logo.png"
                         alt="Petr Pin Desktop"
                         style={{ animationDelay: '1.5s' }}
-                        className="hidden md:block absolute top-[60%] right-[25%] md:w-24 opacity-60 animate-float drop-shadow-2xl z-0"
+                        className="hidden md:block absolute top-[60%] right-[5%] lg:right-[10%] xl:right-[15%] md:w-24 opacity-60 animate-float drop-shadow-2xl z-0"
                     />
 
                     {/* Gradient Overlay for style and contrast */}
