@@ -337,12 +337,12 @@ function PlayingPanel({
   }, [currentRound?.image]);
 
   return (
-    <div>
-      <div className="relative w-screen h-screen">
+    <div className="fixed inset-0 z-0 bg-background overflow-hidden">
+      <div className="absolute inset-0 z-0">
         <div ref={panoRef} className="absolute inset-0" />
       </div>
       {/* UI Overlay */}
-      <div className="relative z-10 pointer-events-none">
+      <div className="absolute inset-0 z-10 pointer-events-none">
         <ScoreHeader
           left={left}
           right={right}
@@ -393,7 +393,7 @@ function ResultsPanel({ roundResults, left, right, singleplayer = false, isPerfe
   if (!roundResults) return null;
 
   return (
-    <div className="relative w-screen h-screen">
+    <div className="fixed inset-0 z-0 bg-background overflow-hidden">
       <ResultsMap
         actualLocation={roundResults.results.actual_location}
         results={roundResults.results.players}
@@ -572,7 +572,7 @@ export default function GameBoard({ ws, playerId, mode }: GameBoardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
+    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden z-0">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 font-mono text-sm text-red-700 max-w-md w-full">
           ⚠️ {error}
