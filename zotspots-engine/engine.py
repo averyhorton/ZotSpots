@@ -174,6 +174,23 @@ class GameEngine:
                 game.actual_location["lng"]
             )
 
+            if distance > MAX_CAMPUS_DISTANCE:
+                bearing = self._calculate_bearing(
+                    game.actual_location["lat"],
+                    game.actual_location["lng"],
+                    guess["lat"],
+                    guess["lng"]
+                )
+                new_lat, new_lng = self._calculate_destination(
+                    game.actual_location["lat"],
+                    game.actual_location["lng"],
+                    bearing,
+                    MAX_CAMPUS_DISTANCE
+                )
+                guess["lat"] = new_lat
+                guess["lng"] = new_lng
+                distance = MAX_CAMPUS_DISTANCE
+
             is_perfect = distance <= PERFECT_GUESS_THRESHOLD
             round_score = 1000 if is_perfect else max(0, int(1000 * (1 - (distance / MAX_CAMPUS_DISTANCE))))
             game.players[player_id]["score"] += round_score
@@ -203,6 +220,25 @@ class GameEngine:
 
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return R * c
+
+    def _calculate_bearing(self, lat1, lng1, lat2, lng2):
+        lat1, lng1, lat2, lng2 = map(math.radians, [lat1, lng1, lat2, lng2])
+        d_lng = lng2 - lng1
+        y = math.sin(d_lng) * math.cos(lat2)
+        x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(d_lng)
+        return math.atan2(y, x)
+
+    def _calculate_destination(self, lat1, lng1, bearing, distance):
+        R = 6371e3
+        d = distance / R
+        lat1, lng1 = map(math.radians, [lat1, lng1])
+        
+        lat2 = math.asin(math.sin(lat1) * math.cos(d) +
+                         math.cos(lat1) * math.sin(d) * math.cos(bearing))
+        lng2 = lng1 + math.atan2(math.sin(bearing) * math.sin(d) * math.cos(lat1),
+                                 math.cos(d) - math.sin(lat1) * math.sin(lat2))
+                                 
+        return math.degrees(lat2), math.degrees(lng2)
 
     def encode(self, length=6) -> str:
         # Creates a joinable code for a game
